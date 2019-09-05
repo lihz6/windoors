@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
-import { Spin, Layout } from 'antd';
+import { Icon, Slider, Collapse } from 'antd';
 import withPath from '_base/withPath';
 //import Component from '_view/Component';
 import { data, NodeRoot, Node, Type } from './struct';
@@ -24,6 +24,7 @@ export default withPath('/x000/draw', {}, {})(
     const [scale, setScale] = useState(1);
     const [root, setRoot] = useState<NodeRoot>(data);
     const [offset, setOffset] = useState<[number, number]>([0, 0]);
+    const [rotate, setRotate] = useState(0);
     useEffect(() => {
       if (!canvas.current) return;
       const div = canvas.current;
@@ -33,8 +34,13 @@ export default withPath('/x000/draw', {}, {})(
       setScale(Math.min(hmin, wmin) * 0.9);
       setOffset([
         (offsetWidth - root.width) / 2,
-        (offsetHeight - root.height) / 2,
+        // (offsetHeight - root.height) / 2,
+        0,
       ]);
+      div.scrollTo({
+        top: (root.height - offsetHeight) / 2,
+      });
+      //
     }, [canvas.current]);
 
     return (
@@ -44,12 +50,46 @@ export default withPath('/x000/draw', {}, {})(
           ref={canvas}
           // focusable
           tabIndex={0}>
-          <RenderRoot root={root} offset={offset} scale={scale} focusId={-1} />
+          <RenderRoot
+            root={root}
+            offset={offset}
+            scale={scale}
+            focusId={-1}
+            rotate={rotate}
+          />
         </div>
-        <div
+        <Collapse
           className="draw-object"
-          // focusable
-          tabIndex={1}></div>
+          bordered={false}
+          defaultActiveKey={['1']}>
+          <Collapse.Panel header="缩放画板" key="1">
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Icon
+                type="minus-circle"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setScale(scale - 0.001)}
+              />
+              <Slider
+                style={{ flex: 'auto', position: 'relative', top: '-2px' }}
+                min={0}
+                max={100}
+                onChange={scale => setScale((scale as any) / 100)}
+                value={scale * 100}
+              />
+              <Icon
+                type="plus-circle"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setScale(scale + 0.001)}
+              />
+            </div>
+          </Collapse.Panel>
+          <Collapse.Panel header="This is panel header 2" key="2">
+            <p>Option</p>
+          </Collapse.Panel>
+          <Collapse.Panel header="This is panel header 3" key="3">
+            <p>Option</p>
+          </Collapse.Panel>
+        </Collapse>
       </div>
     );
   }
@@ -59,13 +99,16 @@ interface RenderRootProps {
   focusId: number;
   scale: number;
   offset: [number, number];
+  rotate: number;
 }
-export function RenderRoot({ root, offset, scale }: RenderRootProps) {
+export function RenderRoot({ root, offset, scale, rotate }: RenderRootProps) {
   return (
     <div
       style={{
         transformOrigin: 'center',
-        transform: `translate(${offset[0]}px, ${offset[1]}px) scale(${scale})`,
+        transform: `translate(${offset[0]}px, ${
+          offset[1]
+        }px) scale(${scale}) rotateY(${(rotate % 2) * 180}deg)`,
         width: `${root.width}px`,
         height: `${root.height}px`,
         display: 'flex',

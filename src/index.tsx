@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
-import { LocaleProvider } from 'antd';
-import zh_CN from 'antd/lib/locale-provider/zh_CN';
+import { ConfigProvider } from 'antd';
+import zh_CN from 'antd/es/locale/zh_CN';
 import 'moment/locale/zh-cn';
 
 import './_sass/reset.scss';
@@ -26,9 +26,9 @@ import { Layout } from 'antd';
 import './_sass/cover.scss';
 
 ReactDOM.render(
-  <LocaleProvider locale={zh_CN}>
+  <ConfigProvider locale={zh_CN}>
     <Context>{renderRouter}</Context>
-  </LocaleProvider>,
+  </ConfigProvider>,
   document.getElementById('root')
 );
 

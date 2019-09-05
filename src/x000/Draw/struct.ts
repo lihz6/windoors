@@ -24,7 +24,7 @@ const Pipe: Record<'W5H5' | 'W3H3', Pipe> = {
     id: 'W5H5',
     width: 50,
     height: 50,
-    color: 'pink',
+    color: 'gray',
   },
   W3H3: {
     id: 'W3H3',
