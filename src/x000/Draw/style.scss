@@ -57,4 +57,9 @@
     flex: 1 0;
     min-width: 240px;
   }
+  &-node {
+    &-focus {
+      background: pink !important;
+    }
+  }
 }

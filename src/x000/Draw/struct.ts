@@ -90,37 +90,6 @@ export type Node =
 
 const now = Date.now();
 
-const children: Node[] = [
-  {
-    id: now + 9,
-    type: Type.AREA,
-    size: 0,
-    grow: 2,
-  },
-  {
-    id: now + 10,
-    type: Type.PIPE,
-    pipe: Pipe.W5H5,
-  },
-  {
-    id: now + 11,
-    type: Type.AREA,
-    size: 0,
-    grow: 1,
-  },
-  {
-    id: now + 12,
-    type: Type.PIPE,
-    pipe: Pipe.W5H5,
-  },
-  {
-    id: now + 13,
-    type: Type.AREA,
-    size: 0,
-    grow: 2,
-  },
-];
-
 export const data: NodeRoot = {
   id: now,
   type: Type.ROOT,
@@ -157,7 +126,67 @@ export const data: NodeRoot = {
               size: 0,
               grow: 1,
               flow: Flow.T2B,
-              children,
+              children: [
+                {
+                  id: now + 9,
+                  type: Type.AREA,
+                  size: 0,
+                  grow: 2,
+                  flow: Flow.L2R,
+                  children: [
+                    {
+                      id: now + 14,
+                      type: Type.AREA,
+                      size: 0,
+                      grow: 1,
+                    },
+                    {
+                      id: now + 15,
+                      type: Type.PIPE,
+                      pipe: Pipe.W5H5,
+                    },
+                    {
+                      id: now + 16,
+                      type: Type.AREA,
+                      size: 0,
+                      grow: 1,
+                    },
+                    {
+                      id: now + 17,
+                      type: Type.PIPE,
+                      pipe: Pipe.W5H5,
+                    },
+                    {
+                      id: now + 18,
+                      type: Type.AREA,
+                      size: 0,
+                      grow: 1,
+                    },
+                  ],
+                },
+                {
+                  id: now + 10,
+                  type: Type.PIPE,
+                  pipe: Pipe.W5H5,
+                },
+                {
+                  id: now + 11,
+                  type: Type.AREA,
+                  size: 0,
+                  grow: 1,
+                },
+                {
+                  id: now + 12,
+                  type: Type.PIPE,
+                  pipe: Pipe.W5H5,
+                },
+                {
+                  id: now + 13,
+                  type: Type.AREA,
+                  size: 0,
+                  grow: 2,
+                },
+              ],
             },
             {
               id: now + 8,
@@ -194,4 +223,25 @@ export function lockwidth(data: NodeRoot) {
   const lock = children.find(({ type }) => type == Type.LOCK) as NodeLock;
   const square = (width - height) * (width + height);
   return Math.ceil(width - Math.sqrt(square)) + lock.offset;
+}
+
+export function listPath(node: NodeRoot, id: number): Node[] {
+  if (node.id === id) return [node];
+  for (const n of node.children || []) {
+    const path = listPath(n as NodeRoot, id);
+    if (path.length) {
+      return [...path, node];
+    }
+  }
+  return [];
+}
+
+export function nodeContains(parent: NodeRoot, childId: number) {
+  if (parent.id === childId) return true;
+  for (const child of parent.children || []) {
+    if (child.id === childId || nodeContains(child as NodeRoot, childId)) {
+      return true;
+    }
+  }
+  return false;
 }

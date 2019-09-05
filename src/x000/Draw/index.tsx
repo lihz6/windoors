@@ -7,14 +7,14 @@
  */
 
 /** Happy Coding */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, SyntheticEvent } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
 import { Icon, Slider, Collapse } from 'antd';
 import withPath from '_base/withPath';
 //import Component from '_view/Component';
-import { data, NodeRoot, Node, Type } from './struct';
-
+import { data, NodeRoot, Node, Type, listPath, nodeContains } from './struct';
+import tree from '_util/_tree';
 import { getData } from './fetch';
 import './style.scss';
 
@@ -25,6 +25,17 @@ export default withPath('/x000/draw', {}, {})(
     const [root, setRoot] = useState<NodeRoot>(data);
     const [offset, setOffset] = useState<[number, number]>([0, 0]);
     const [rotate, setRotate] = useState(0);
+    const [focusId, setFocusId] = useState(-1);
+    const onNodeClick = (event: SyntheticEvent, node: Node) => {
+      event.stopPropagation();
+      const list = listPath(root, focusId);
+      console.table(list);
+      if (list.length < 3 || !nodeContains(list[0] as NodeRoot, node.id)) {
+        setFocusId(node.id);
+      } else {
+        setFocusId(list[1].id);
+      }
+    };
     useEffect(() => {
       if (!canvas.current) return;
       const div = canvas.current;
@@ -51,11 +62,12 @@ export default withPath('/x000/draw', {}, {})(
           // focusable
           tabIndex={0}>
           <RenderRoot
-            root={root}
+            onClick={onNodeClick}
+            focusId={focusId}
             offset={offset}
-            scale={scale}
-            focusId={-1}
             rotate={rotate}
+            scale={scale}
+            root={root}
           />
         </div>
         <Collapse
@@ -100,11 +112,22 @@ interface RenderRootProps {
   scale: number;
   offset: [number, number];
   rotate: number;
+  onClick(event: SyntheticEvent, node: Node): void;
 }
-export function RenderRoot({ root, offset, scale, rotate }: RenderRootProps) {
+export function RenderRoot({
+  root,
+  offset,
+  scale,
+  rotate,
+  focusId,
+  onClick,
+}: RenderRootProps) {
   return (
     <div
+      className={tree({ 'draw-node': { focus: root.id === focusId } })}
+      onClick={event => onClick(event, root)}
       style={{
+        cursor: 'pointer',
         transformOrigin: 'center',
         transform: `translate(${offset[0]}px, ${
           offset[1]
@@ -114,18 +137,27 @@ export function RenderRoot({ root, offset, scale, rotate }: RenderRootProps) {
         display: 'flex',
         flexDirection: root.flow,
       }}>
-      {root.children.map(child => render(child, root))}
+      {root.children.map(child => render(child, root, focusId, onClick))}
     </div>
   );
 }
 
-export function render(node: Node, root: Node) {
+export function render(
+  node: Node,
+  root: Node,
+  focusId: number,
+  onClick: RenderRootProps['onClick']
+) {
   switch (node.type) {
     // case Type.ROOT: see RenderRoot
     case Type.LOCK:
       return (
         <div
           key={node.id}
+          onClick={event => onClick(event, node)}
+          className={tree({
+            'draw-node': { focus: node.id === focusId, [node.type]: true },
+          })}
           style={{
             // flex: `0 0 ${node.offset + lockwidth(root as NodeRoot)}px`,
             flex: `0 0 0.5%`,
@@ -137,30 +169,44 @@ export function render(node: Node, root: Node) {
       return (
         <div
           key={node.id}
+          onClick={event => onClick(event, node)}
+          className={tree({
+            'draw-node': { focus: node.id === focusId, [node.type]: true },
+          })}
           style={{
             display: 'flex',
             flexDirection: node.flow,
             flex: 'auto',
           }}>
-          {node.children.map(child => render(child, node))}
+          {node.children.map(child => render(child, node, focusId, onClick))}
         </div>
       );
     case Type.AREA:
       return (
         <div
           key={node.id}
+          onClick={event => onClick(event, node)}
+          className={tree({
+            'draw-node': { focus: node.id === focusId, [node.type]: true },
+          })}
           style={{
             display: 'flex',
             flexDirection: node.flow || 'row',
             flex: `${node.grow} ${node.grow} ${node.size}px`,
           }}>
-          {(node.children || []).map(child => render(child, node))}
+          {(node.children || []).map(child =>
+            render(child, node, focusId, onClick)
+          )}
         </div>
       );
     case Type.PIPE:
       return (
         <div
           key={node.id}
+          onClick={event => onClick(event, node)}
+          className={tree({
+            'draw-node': { focus: node.id === focusId, [node.type]: true },
+          })}
           style={{
             flex: `0 0 ${node.pipe.width}px`,
             background: node.pipe.color,
@@ -171,6 +217,11 @@ export function render(node: Node, root: Node) {
     case Type.BONE:
       return (
         <div
+          key={node.id}
+          onClick={event => onClick(event, node)}
+          className={tree({
+            'draw-node': { focus: node.id === focusId, [node.type]: true },
+          })}
           style={{
             width: `${node.bone.width}px`,
             height: `${node.bone.height}px`,
