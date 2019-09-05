@@ -1,0 +1,51 @@
+@import './antd';
+
+// end: ant design colors
+
+/// $color: theme color:
+$color: $primary-color;
+
+/// $color-{white,black}-{1..9}0: lighten or darken
+$color-white-10: lighten($color, 10%);
+$color-white-20: lighten($color, 20%);
+$color-white-30: lighten($color, 30%);
+$color-white-40: lighten($color, 40%);
+$color-white-50: lighten($color, 50%);
+$color-white-60: lighten($color, 60%);
+$color-white-70: lighten($color, 70%);
+$color-white-80: lighten($color, 80%);
+$color-white-90: lighten($color, 90%);
+
+// theme color darken:
+$color-black-10: darken($color, 10%);
+$color-black-20: darken($color, 20%);
+$color-black-30: darken($color, 30%);
+$color-black-40: darken($color, 40%);
+$color-black-50: darken($color, 50%);
+$color-black-60: darken($color, 60%);
+$color-black-70: darken($color, 70%);
+$color-black-80: darken($color, 80%);
+$color-black-90: darken($color, 90%);
+
+/// $color-font-head: heading color
+/// $color-font: text main color
+/// $color-font-gray: text secondary color
+$color-font-head: $heading-color;
+$color-font: $text-color;
+$color-font-gray: $text-color-secondary;
+
+/// $color-border: border color
+$color-border: $border-color-base;
+
+/// $color-background: background color
+$color-background: #f5f5f9;
+
+/// $color-{fail,okay,warn,info,dead}: status colors
+$color-fail: $error-color;
+$color-okay: $success-color;
+$color-warn: $warning-color;
+$color-info: #23a2b7;
+$color-dead: $disabled-color;
+
+/// `box-shadow`: $box-shadow
+$box-shadow: $box-shadow-base;

@@ -1,0 +1,50 @@
+@import './vars';
+#root {
+  width: 100vw;
+  height: 100vh;
+  min-width: 720px;
+  min-height: 480px;
+}
+
+* {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+// margin-top between siblings
+.-glob-smtop {
+  & + & {
+    margin-top: 16px;
+  }
+}
+
+.-glob-h100 {
+  height: 100%;
+}
+
+.-glob-box-shadow {
+  box-shadow: $box-shadow;
+}
+
+@keyframes popup {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

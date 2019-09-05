@@ -1,0 +1,14 @@
+{
+  "files.autoSave": "onFocusChange",
+  "files.exclude": {
+    "**/config-overrides.js": true,
+    "**/package-lock.json": true,
+    "**/.prettierignore": true,
+    "**/tsconfig.json": true,
+    "**/.gitignore": true,
+    "**/yarn.lock": true,
+    "**/.pjcode": true,
+    "**/.vscode": true,
+    "**/docs": true
+  }
+}
