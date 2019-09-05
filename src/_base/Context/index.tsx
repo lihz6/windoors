@@ -63,7 +63,7 @@ export default class Context extends PureComponent<Props, ContextState> {
         this.setState(data);
       })
       .catch(() => {
-        this.setState({ userflag: Userflag.UNKNOWN });
+        this.setState({ userflag: 1 });
       });
   }
   render() {

@@ -12,6 +12,7 @@ import Context, { ContextState, Userflag } from '_base/Context';
 import Init from './x000/Init';
 import Sign from './x000/Sign';
 import Head from './x000/Head';
+import Draw from './x000/Draw';
 // #########################
 import {
   BrowserRouter as Router,
@@ -40,11 +41,22 @@ function renderRouter({ userflag, userName, popupView }: ContextState) {
     default:
       return (
         <Router>
-          <Layout>
+          <Layout style={{ height: '100%' }}>
             <Route component={Head} />
-            <Switch>
-              <Redirect exact from="/" to="/x000" />
-            </Switch>
+            <Layout>
+              <Layout.Sider
+                width={200}
+                theme="light"
+                style={{ backgroundColor: 'white' }}>
+                Menu
+              </Layout.Sider>
+              <Layout style={{ padding: '8px' }}>
+                <Switch>
+                  <Route path={Draw.path} component={Draw} />
+                  <Redirect exact from="/" to="/x000/draw" />
+                </Switch>
+              </Layout>
+            </Layout>
           </Layout>
         </Router>
       );
