@@ -236,12 +236,19 @@ export function listPath(node: NodeRoot, id: number): Node[] {
   return [];
 }
 
-export function nodeContains(parent: NodeRoot, childId: number) {
-  if (parent.id === childId) return true;
-  for (const child of parent.children || []) {
-    if (child.id === childId || nodeContains(child as NodeRoot, childId)) {
-      return true;
+export function nodeContains(
+  root: NodeRoot,
+  childId: number,
+  includeSelf = true
+) {
+  if (includeSelf && root.id === childId) return true;
+  const contains = (parent: NodeRoot) => {
+    for (const child of parent.children || []) {
+      if (child.id === childId || contains(child as NodeRoot)) {
+        return true;
+      }
     }
-  }
-  return false;
+    return false;
+  };
+  return contains(root);
 }

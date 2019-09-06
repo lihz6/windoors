@@ -15,44 +15,36 @@ import withPath from '_base/withPath';
 //import Component from '_view/Component';
 import { data, NodeRoot, Node, Type, listPath, nodeContains } from './struct';
 import tree from '_util/_tree';
+import useScale from './useScale';
 import { getData } from './fetch';
 import './style.scss';
 
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
-    const canvas = useRef<HTMLDivElement>(null);
-    const [scale, setScale] = useState(1);
     const [root, setRoot] = useState<NodeRoot>(data);
-    const [offset, setOffset] = useState<[number, number]>([0, 0]);
+    const canvas = useRef<HTMLDivElement>(null);
+    const {
+      // translate offset
+      offset,
+      // 0.0 - 1.0
+      minScale,
+      maxScale,
+      scale,
+      setScale,
+      setMinScale,
+      setMaxScale,
+    } = useScale(root, canvas);
     const [rotate, setRotate] = useState(0);
     const [focusId, setFocusId] = useState(-1);
     const onNodeClick = (event: SyntheticEvent, node: Node) => {
       event.stopPropagation();
       const list = listPath(root, focusId);
-      console.table(list);
       if (list.length < 3 || !nodeContains(list[0] as NodeRoot, node.id)) {
         setFocusId(node.id);
       } else {
         setFocusId(list[1].id);
       }
     };
-    useEffect(() => {
-      if (!canvas.current) return;
-      const div = canvas.current;
-      const { offsetHeight, offsetWidth } = div;
-      const hmin = offsetHeight / root.height;
-      const wmin = offsetWidth / root.width;
-      setScale(Math.min(hmin, wmin) * 0.9);
-      setOffset([
-        (offsetWidth - root.width) / 2,
-        // (offsetHeight - root.height) / 2,
-        0,
-      ]);
-      div.scrollTo({
-        top: (root.height - offsetHeight) / 2,
-      });
-      //
-    }, [canvas.current]);
 
     return (
       <div className="draw-main">
@@ -78,20 +70,21 @@ export default withPath('/x000/draw', {}, {})(
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Icon
                 type="minus-circle"
-                style={{ cursor: 'pointer' }}
-                onClick={() => setScale(scale - 0.001)}
+                style={{ cursor: 'pointer', marginRight: '8px' }}
+                onClick={setMinScale}
               />
               <Slider
                 style={{ flex: 'auto', position: 'relative', top: '-2px' }}
-                min={0}
-                max={100}
+                min={minScale * 100}
+                max={maxScale * 100}
+                tipFormatter={value => `${value}%`}
                 onChange={scale => setScale((scale as any) / 100)}
                 value={scale * 100}
               />
               <Icon
                 type="plus-circle"
-                style={{ cursor: 'pointer' }}
-                onClick={() => setScale(scale + 0.001)}
+                style={{ cursor: 'pointer', marginLeft: '8px' }}
+                onClick={setMaxScale}
               />
             </div>
           </Collapse.Panel>
@@ -114,6 +107,8 @@ interface RenderRootProps {
   rotate: number;
   onClick(event: SyntheticEvent, node: Node): void;
 }
+
+// TODO: https://github.com/clauderic/react-sortable-hoc
 export function RenderRoot({
   root,
   offset,
@@ -124,8 +119,7 @@ export function RenderRoot({
 }: RenderRootProps) {
   return (
     <div
-      className={tree({ 'draw-node': { focus: root.id === focusId } })}
-      onClick={event => onClick(event, root)}
+      className={tree({ 'draw-node': root.type })}
       style={{
         cursor: 'pointer',
         transformOrigin: 'center',
