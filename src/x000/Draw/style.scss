@@ -38,8 +38,9 @@
   }
   &-canvas,
   &-object {
+    transition: 200ms;
     background: white;
-    opacity: 0.8;
+    opacity: 0.92;
     &:focus {
       opacity: 1;
       // outline: gray auto 1px;
@@ -56,10 +57,5 @@
     margin-left: 8px;
     flex: 1 0;
     min-width: 240px;
-  }
-  &-node {
-    &-focus {
-      background: pink !important;
-    }
   }
 }

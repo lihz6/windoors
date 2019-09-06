@@ -1,8 +1,7 @@
 export enum Type {
-  ROOT = 'root', // 门框
+  MAIN = 'main', // 门框
   LOCK = 'lock', // 门隙
-  MAIN = 'main', // 门板
-  AREA = 'area', // 格子
+  FLEX = 'flex', // 格子
   PIPE = 'pipe', // 钢管
   BONE = 'bone', // 花纹
 }
@@ -49,9 +48,9 @@ const Bone: Record<'CUTTING', Bone> = {
   },
 };
 
-export type NodeRoot = {
+export type NodeMain = {
   id: number;
-  type: Type.ROOT;
+  type: Type.MAIN;
   flow: Flow.L2R;
   width: number;
   height: number;
@@ -60,16 +59,9 @@ export type NodeRoot = {
 
 type NodeLock = { id: number; type: Type.LOCK; offset: number };
 
-type NodeMain = {
-  id: number;
-  type: Type.MAIN;
-  flow: Flow;
-  children: Node[];
-};
-
 type NodeArea = {
   id: number;
-  type: Type.AREA;
+  type: Type.FLEX;
   flow?: Flow;
   size: number;
   grow: number;
@@ -80,19 +72,13 @@ type NodePipe = { id: number; type: Type.PIPE; pipe: Pipe };
 
 type NodeBone = { id: number; type: Type.BONE; bone: Bone };
 
-export type Node =
-  | NodeRoot
-  | NodeLock
-  | NodeMain
-  | NodeArea
-  | NodePipe
-  | NodeBone;
+export type Node = NodeMain | NodeLock | NodeArea | NodePipe | NodeBone;
 
 const now = Date.now();
 
-export const data: NodeRoot = {
+export const data: NodeMain = {
   id: now,
-  type: Type.ROOT,
+  type: Type.MAIN,
   flow: Flow.L2R,
   width: 1800,
   height: 2400,
@@ -100,8 +86,10 @@ export const data: NodeRoot = {
     { id: now + 1, type: Type.LOCK, offset: 0 },
     {
       id: now + 2,
-      type: Type.MAIN,
+      type: Type.FLEX,
       flow: Flow.T2B,
+      size: 0,
+      grow: 1,
       children: [
         {
           id: now + 3,
@@ -110,7 +98,7 @@ export const data: NodeRoot = {
         },
         {
           id: now + 4,
-          type: Type.AREA,
+          type: Type.FLEX,
           flow: Flow.L2R,
           size: 0,
           grow: 1,
@@ -122,21 +110,21 @@ export const data: NodeRoot = {
             },
             {
               id: now + 7,
-              type: Type.AREA,
+              type: Type.FLEX,
               size: 0,
               grow: 1,
               flow: Flow.T2B,
               children: [
                 {
                   id: now + 9,
-                  type: Type.AREA,
+                  type: Type.FLEX,
                   size: 0,
                   grow: 2,
                   flow: Flow.L2R,
                   children: [
                     {
                       id: now + 14,
-                      type: Type.AREA,
+                      type: Type.FLEX,
                       size: 0,
                       grow: 1,
                     },
@@ -147,7 +135,7 @@ export const data: NodeRoot = {
                     },
                     {
                       id: now + 16,
-                      type: Type.AREA,
+                      type: Type.FLEX,
                       size: 0,
                       grow: 1,
                     },
@@ -158,7 +146,7 @@ export const data: NodeRoot = {
                     },
                     {
                       id: now + 18,
-                      type: Type.AREA,
+                      type: Type.FLEX,
                       size: 0,
                       grow: 1,
                     },
@@ -171,7 +159,7 @@ export const data: NodeRoot = {
                 },
                 {
                   id: now + 11,
-                  type: Type.AREA,
+                  type: Type.FLEX,
                   size: 0,
                   grow: 1,
                 },
@@ -182,7 +170,7 @@ export const data: NodeRoot = {
                 },
                 {
                   id: now + 13,
-                  type: Type.AREA,
+                  type: Type.FLEX,
                   size: 0,
                   grow: 2,
                 },
@@ -205,7 +193,7 @@ export const data: NodeRoot = {
   ],
 };
 
-export function lockwidth(data: NodeRoot) {
+export function lockwidth(data: NodeMain) {
   const barheight = (nodes: Node[]): number => {
     return nodes.reduce((a, node) => {
       const { children, pipe } = node as NodeArea & NodePipe;
@@ -225,10 +213,10 @@ export function lockwidth(data: NodeRoot) {
   return Math.ceil(width - Math.sqrt(square)) + lock.offset;
 }
 
-export function listPath(node: NodeRoot, id: number): Node[] {
+export function listPath(node: NodeMain, id: number): Node[] {
   if (node.id === id) return [node];
   for (const n of node.children || []) {
-    const path = listPath(n as NodeRoot, id);
+    const path = listPath(n as NodeMain, id);
     if (path.length) {
       return [...path, node];
     }
@@ -237,18 +225,18 @@ export function listPath(node: NodeRoot, id: number): Node[] {
 }
 
 export function nodeContains(
-  root: NodeRoot,
+  main: NodeMain,
   childId: number,
   includeSelf = true
 ) {
-  if (includeSelf && root.id === childId) return true;
-  const contains = (parent: NodeRoot) => {
+  if (includeSelf && main.id === childId) return true;
+  const contains = (parent: NodeMain) => {
     for (const child of parent.children || []) {
-      if (child.id === childId || contains(child as NodeRoot)) {
+      if (child.id === childId || contains(child as NodeMain)) {
         return true;
       }
     }
     return false;
   };
-  return contains(root);
+  return contains(main);
 }

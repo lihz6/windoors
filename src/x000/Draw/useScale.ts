@@ -1,22 +1,22 @@
 import { useState, useEffect, RefObject } from 'react';
-import { NodeRoot } from './struct';
+import { NodeMain } from './struct';
 
-export default function(root: NodeRoot, canvas: RefObject<HTMLDivElement>) {
+export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
   const [scale, setScale] = useState(0.618);
   const [minScale, _setMinScale] = useState(0);
   const [maxScale, _setMaxScale] = useState(1);
   const [offset, setOffset] = useState<[number, number]>([0, 0]);
   const scaleOffset = ({ offsetHeight, offsetWidth }: HTMLDivElement) => {
-    const hmin = (offsetHeight / root.height) * 0.96;
-    const wmin = (offsetWidth / root.width) * 0.96;
-    const minScale = Math.min(hmin, wmin);
-    const maxScale = Math.max(hmin, wmin);
+    const hmin = (offsetHeight / main.height) * 96;
+    const wmin = (offsetWidth / main.width) * 96;
+    const minScale = Math.ceil(Math.min(hmin, wmin));
+    const maxScale = Math.floor(Math.max(hmin, wmin));
     _setMinScale(minScale);
     _setMaxScale(maxScale);
     setScale(minScale);
     setOffset([
-      (offsetWidth - root.width) / 2,
-      // (offsetHeight - root.height) / 2,
+      (offsetWidth - main.width) / 2,
+      // (offsetHeight - main.height) / 2,
       0,
     ]);
     return [minScale, maxScale];
@@ -25,7 +25,7 @@ export default function(root: NodeRoot, canvas: RefObject<HTMLDivElement>) {
     if (canvas.current) {
       setScale(minaxScale);
       canvas.current.scrollTo({
-        top: (root.height - canvas.current.offsetHeight) / 2,
+        top: (main.height - canvas.current.offsetHeight) / 2,
       });
     }
   };
@@ -41,7 +41,7 @@ export default function(root: NodeRoot, canvas: RefObject<HTMLDivElement>) {
       setScale(scale => {
         if (scale < minScale) {
           elem.scrollTo({
-            top: (root.height - elem.offsetHeight) / 2,
+            top: (main.height - elem.offsetHeight) / 2,
           });
           return minScale;
         } else if (scale > maxScale) {

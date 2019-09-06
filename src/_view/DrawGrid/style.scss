@@ -1,0 +1,33 @@
+/**
+ * ```
+ * 李鸿章 <poodll@163.com>
+ * 9/6/2019, 5:31:08 PM
+ * ```
+ * doc comment for the file goes here
+ */
+
+/** Happy Coding */
+@import '~_sass/vars';
+
+// $color: theme color:
+// $color-{white,black}-{1..9}0: lighten or darken
+// $color-font-head: heading color
+// $color-font: text main color
+// $color-font-gray: text secondary color
+// $color-border: border color
+// $color-background: background color
+// $color-{fail,okay,warn,info,dead}: status colors
+// `box-shadow`: $box-shadow
+
+.draw-grid {
+  &-main {
+    width: 240px;
+    height: 240px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-rows: 1fr 1fr 1fr;
+  }
+  &-item {
+    border: 1px solid #eee;
+  }
+}

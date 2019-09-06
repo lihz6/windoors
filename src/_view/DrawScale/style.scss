@@ -1,0 +1,40 @@
+/**
+ * ```
+ * 李鸿章 <poodll@163.com>
+ * 9/6/2019, 2:11:17 PM
+ * ```
+ * doc comment for the file goes here
+ */
+
+/** Happy Coding */
+@import '~_sass/vars';
+
+// $color: theme color:
+// $color-{white,black}-{1..9}0: lighten or darken
+// $color-font-head: heading color
+// $color-font: text main color
+// $color-font-gray: text secondary color
+// $color-border: border color
+// $color-background: background color
+// $color-{fail,okay,warn,info,dead}: status colors
+// `box-shadow`: $box-shadow
+
+.draw-scale {
+  &-main {
+    display: flex;
+    align-items: center;
+  }
+  &-min {
+    cursor: pointer;
+    margin-right: 8px;
+  }
+  &-max {
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  &-slider {
+    flex: auto;
+    position: relative;
+    top: -2px;
+  }
+}
