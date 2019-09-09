@@ -2,6 +2,7 @@ export enum Type {
   MAIN = 'main', // 门框
   LOCK = 'lock', // 门隙
   FLEX = 'flex', // 格子
+  GRID = 'grid', // 格子
   PIPE = 'pipe', // 钢管
   BONE = 'bone', // 花纹
 }
@@ -68,11 +69,27 @@ type NodeArea = {
   children?: Node[];
 };
 
+type NodeGrid = {
+  id: number;
+  type: Type.GRID;
+  squared: number;
+  start: number;
+  end: number;
+  area: number[];
+  children: Node[];
+};
+
 type NodePipe = { id: number; type: Type.PIPE; pipe: Pipe };
 
 type NodeBone = { id: number; type: Type.BONE; bone: Bone };
 
-export type Node = NodeMain | NodeLock | NodeArea | NodePipe | NodeBone;
+export type Node =
+  | NodeMain
+  | NodeLock
+  | NodeArea
+  | NodeGrid
+  | NodePipe
+  | NodeBone;
 
 const now = Date.now();
 

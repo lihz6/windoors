@@ -22,6 +22,7 @@ import { Icon, Slider, Collapse } from 'antd';
 import withPath from '_base/withPath';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
+import DrawGrid from '_view/DrawGrid';
 import { data, NodeMain, Node, Type, listPath, nodeContains } from './struct';
 import tree from '_util/_tree';
 import useScale from './useScale';
@@ -63,27 +64,28 @@ export default withPath('/x000/draw', {}, {})(
             mainNode={mainNode}
           />
         </div>
-        <Collapse
-          className="draw-object"
-          bordered={false}
-          defaultActiveKey={['1']}>
-          <Collapse.Panel header="缩放画板" key="1">
-            <DrawScale
-              setMinScale={setMinScale}
-              setMaxScale={setMaxScale}
-              setScale={setScale}
-              minScale={minScale}
-              maxScale={maxScale}
-              scale={scale}
-            />
-          </Collapse.Panel>
-          <Collapse.Panel header="This is panel header 2" key="2">
-            <p>Option</p>
-          </Collapse.Panel>
-          <Collapse.Panel header="This is panel header 3" key="3">
-            <p>Option</p>
-          </Collapse.Panel>
-        </Collapse>
+        <div className="draw-object">
+          <DrawScale
+            setMinScale={setMinScale}
+            setMaxScale={setMaxScale}
+            setScale={setScale}
+            minScale={minScale}
+            maxScale={maxScale}
+            scale={scale}
+          />
+          <DrawGrid squared={9} />
+          <Collapse bordered={false} defaultActiveKey={['1']}>
+            <Collapse.Panel header="墙面大小" key="1">
+              墙面大小
+            </Collapse.Panel>
+            <Collapse.Panel header="开口位置" key="2">
+              开口位置
+            </Collapse.Panel>
+            <Collapse.Panel header="其他设置" key="3">
+              其他设置
+            </Collapse.Panel>
+          </Collapse>
+        </div>
       </div>
     );
   }

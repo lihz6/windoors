@@ -32,7 +32,6 @@ export default function DrawScale({
   maxScale,
   scale,
 }: DrawScaleProps) {
-  console.log(minScale, scale, maxScale);
   return (
     <div className="draw-scale-main">
       <Icon
