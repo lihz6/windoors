@@ -20,11 +20,13 @@ import React, {
 import chunk from 'lodash/chunk';
 import zip from 'lodash/zip';
 // import { tree } from '_util';
-import { inSquared } from '../DrawGrid';
+
+import DrawGrid, { inSquared } from '../DrawGrid';
+
 import './style.scss';
 
 export interface DrawGridSubProps {
-  setArea: Dispatch<SetStateAction<number[]>>;
+  setArea: DrawGrid['setState'];
   startrc: [number, number];
   endrc: [number, number];
   area: number[];
@@ -75,11 +77,11 @@ export default function DrawGridSub({
             onMouseEnter={() => {
               // Step 2
               if (start > -1 && area.every((_a, i) => _a === i || _a !== a)) {
-                setArea(area =>
-                  area.map((_a, i) =>
+                setArea(({ area }) => ({
+                  area: area.map((_a, i) =>
                     inSquared(i, start, a, col) ? start : _a
-                  )
-                );
+                  ),
+                }));
               }
             }}
             onMouseDown={() => {
@@ -89,7 +91,9 @@ export default function DrawGridSub({
               }
             }}
             onDoubleClick={() => {
-              setArea(area => area.map((_a, index) => (_a === a ? index : _a)));
+              setArea(({ area }) => ({
+                area: area.map((_a, index) => (_a === a ? index : _a)),
+              }));
             }}
           />
         ))}

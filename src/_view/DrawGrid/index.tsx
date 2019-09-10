@@ -7,12 +7,7 @@
  */
 
 /** Happy Coding */
-import React, {
-  ReactNode,
-  ReactEventHandler,
-  useState,
-  useEffect,
-} from 'react';
+import React, { ReactNode, ReactEventHandler } from 'react';
 // import { Link } from 'react-router-dom';
 // import { Icon } from 'antd';
 // import chunk from 'lodash/chunk';
@@ -25,32 +20,50 @@ export interface DrawGridProps {
   squared: number;
 }
 
-export default function DrawGrid({ squared }: DrawGridProps) {
-  const [ondown, setOndown] = useState(false);
-  const [start, setStart] = useState(-1);
-  const [area, setArea] = useState([0]);
-  const [end, setEnd] = useState(-1);
-  useEffect(() => {
-    // Step 3
-    const onMouseUp = () => {
-      setOndown(false);
+interface DrawGridState {
+  ondown: boolean;
+  start: number;
+  end: number;
+  area: number[];
+}
+
+export default class DrawGrid extends React.PureComponent<
+  DrawGridProps,
+  DrawGridState
+> {
+  constructor(props) {
+    super(props);
+    this.setState = this.setState.bind(this);
+    this.state = {
+      ondown: false,
+      start: -1,
+      end: -1,
+      area: [],
     };
-    document.addEventListener('mouseup', onMouseUp);
-    return () => {
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
-  const isSelected = (idx: number) => {
-    const min = start;
-    const max = end;
-    return (
-      idx >= min &&
-      idx <= max &&
-      idx % squared >= min % squared &&
-      idx % squared <= max % squared
-    );
+  }
+  onMouseUp = () => {
+    if (!this.state.ondown) return;
+    this.setState(({ start, end, ondown }) => {
+      if (!ondown) return null;
+      const { squared } = this.props;
+      const erc = divmod(end, squared);
+      const src = divmod(start, squared);
+      const [row, col] = zip(erc, src).map(([e, s]) => e! - s! + 1);
+      return {
+        area: Array.from({ length: row * col }).map((_, index) => index),
+        ondown: false,
+      };
+    });
   };
-  const children = (): [React.ReactChild | null, number[]] => {
+  componentDidMount() {
+    document.addEventListener('mouseup', this.onMouseUp);
+  }
+  componentWillUnmount() {
+    document.removeEventListener('mouseup', this.onMouseUp);
+  }
+  children(): [React.ReactChild | null, number[]] {
+    const { squared } = this.props;
+    const { start, end, ondown, area } = this.state;
     if (start < 0 || end < 0 || ondown) {
       const indices = Array.from({ length: squared * squared }).map(
         (_, index) => index
@@ -61,11 +74,15 @@ export default function DrawGrid({ squared }: DrawGridProps) {
     const src = divmod(start, squared);
     const [row, col] = zip(erc, src).map(([e, s]) => e! - s! + 1);
     const elem = (
-      <DrawGridSub startrc={src} endrc={erc} area={area} setArea={setArea}>
+      <DrawGridSub
+        setArea={this.setState}
+        startrc={src}
+        endrc={erc}
+        area={area}>
         <div
           className="draw-grid-move"
           onMouseDown={() => {
-            setOndown(true);
+            this.setState({ ondown: true });
           }}
         />
       </DrawGridSub>
@@ -78,50 +95,62 @@ export default function DrawGrid({ squared }: DrawGridProps) {
       }
     );
     return [elem, indices];
+  }
+  isSelected(index: number): boolean {
+    const { start, end } = this.state;
+    const { squared } = this.props;
+    const min = start;
+    const max = end;
+    return (
+      index >= min &&
+      index <= max &&
+      index % squared >= min % squared &&
+      index % squared <= max % squared
+    );
+  }
+  onMouseEnter = (index: number) => {
+    // Step 2
+    const { squared } = this.props;
+    const { start, ondown } = this.state;
+    if (
+      ondown &&
+      zip(divmod(index, squared), divmod(start, squared)).every(
+        ([e, s]) => e! >= s!
+      )
+    ) {
+      this.setState({ end: index });
+    }
   };
-  const [row, col] = children();
-  return (
-    <div
-      className="draw-grid-main"
-      style={{
-        gridTemplateColumns: `repeat(${squared}, 1fr)`,
-        gridTemplateRows: `repeat(${squared}, 1fr)`,
-      }}>
-      {row}
-      {col.map(index => (
-        <div
-          key={index + 1}
-          className={tree({
-            'draw-grid-item': { selected: isSelected(index) },
-          })}
-          onMouseEnter={() => {
-            // Step 2
-            if (
-              ondown &&
-              zip(divmod(index, squared), divmod(start, squared)).every(
-                ([e, s]) => e! >= s!
-              )
-            ) {
-              setEnd(index);
-              const erc = divmod(index, squared);
-              const src = divmod(start, squared);
-              const [row, col] = zip(erc, src).map(([e, s]) => e! - s! + 1);
-              setArea(
-                Array.from({ length: row * col }).map((_, index) => index)
-              );
-            }
-          }}
-          onMouseDown={() => {
-            // Step 1
-            setOndown(true);
-            setStart(index);
-            setEnd(index);
-          }}
-        />
-      ))}
-    </div>
-  );
+  onMouseDown = (index: number) => {
+    // Step 1
+    this.setState({ ondown: true, start: index, end: index });
+  };
+  render() {
+    const { squared } = this.props;
+    const [elem, indices] = this.children();
+    return (
+      <div
+        className="draw-grid-main"
+        style={{
+          gridTemplateColumns: `repeat(${squared}, 1fr)`,
+          gridTemplateRows: `repeat(${squared}, 1fr)`,
+        }}>
+        {elem}
+        {indices.map(index => (
+          <div
+            key={index + 1}
+            className={tree({
+              'draw-grid-item': { selected: this.isSelected(index) },
+            })}
+            onMouseEnter={() => this.onMouseEnter(index)}
+            onMouseDown={() => this.onMouseDown(index)}
+          />
+        ))}
+      </div>
+    );
+  }
 }
+
 export function inSquared(
   idx: number,
   start: number,

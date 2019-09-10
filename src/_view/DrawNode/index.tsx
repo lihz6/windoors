@@ -12,7 +12,7 @@ import React, { ReactNode, ReactEventHandler, SyntheticEvent } from 'react';
 // import { Icon } from 'antd';
 // import chunk from 'lodash/chunk';
 import { tree } from '_util';
-import { NodeMain, Node, Type } from '../../x000/Draw/struct';
+import { NodeMain, Node, Type, lockwidth } from '../../x000/Draw/struct';
 
 import './style.scss';
 
@@ -58,12 +58,10 @@ function render(
 ) {
   interface Props {
     key: number;
-    onClick: ReactEventHandler<HTMLDivElement>;
     className: string;
   }
   const props: Props = {
     key: node.id,
-    onClick: event => onClick(event, node),
     className: tree({
       'draw-node': { focus: node.id === focusId, [node.type]: true },
     }),
@@ -75,9 +73,9 @@ function render(
         <div
           {...props}
           style={{
-            // flex: `0 0 ${node.offset + lockwidth(main as NodeMain)}px`,
-            flex: `0 0 0.5%`,
-            background: '#aaa',
+            flex: `0 0 ${node.offset + lockwidth(main as NodeMain)}px`,
+            // flex: `0 0 0.5%`,
+            background: 'white',
           }}
         />
       );
@@ -87,19 +85,28 @@ function render(
           {...props}
           style={{
             display: 'flex',
-            flexDirection: node.flow || 'row',
+            flexDirection: node.flow,
             flex: `${node.grow} ${node.grow} ${node.size}px`,
           }}>
-          {(node.children || []).map(child =>
-            render(child, node, focusId, onClick)
-          )}
+          {node.children.map(child => render(child, node, focusId, onClick))}
         </div>
+      );
+    case Type.AREA:
+      return (
+        <div
+          {...props}
+          onClick={event => onClick(event, node)}
+          style={{
+            flex: `${node.grow} ${node.grow} ${node.size}px`,
+          }}
+        />
       );
     case Type.PIPE:
       const size = Math.ceil(node.pipe.width / 10);
       return (
         <div
           {...props}
+          onClick={event => onClick(event, node)}
           style={{
             flex: `0 0 ${node.pipe.width}px`,
             // background: 'linear-gradient(45deg, #777, #aaa, #777)',
@@ -112,6 +119,7 @@ function render(
       return (
         <div
           {...props}
+          onClick={event => onClick(event, node)}
           style={{
             width: `${node.bone.width}px`,
             height: `${node.bone.height}px`,

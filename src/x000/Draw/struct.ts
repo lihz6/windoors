@@ -1,13 +1,14 @@
 export enum Type {
   MAIN = 'main', // 门框
   LOCK = 'lock', // 门隙
-  FLEX = 'flex', // 格子
-  GRID = 'grid', // 格子
+  FLEX = 'flex', // 伸缩
+  GRID = 'grid', // 网格
+  AREA = 'area', // 空白
   PIPE = 'pipe', // 钢管
   BONE = 'bone', // 花纹
 }
 
-enum Flow {
+export enum Flow {
   T2B = 'column',
   L2R = 'row',
 }
@@ -19,7 +20,7 @@ interface Pipe {
   color: string;
 }
 
-const Pipe: Record<'W5H5' | 'W3H3', Pipe> = {
+export const Pipe: Record<'W5H5' | 'W3H3', Pipe> = {
   W5H5: {
     id: 'W5H5',
     width: 50,
@@ -40,7 +41,7 @@ interface Bone {
   url: string;
 }
 
-const Bone: Record<'CUTTING', Bone> = {
+export const Bone: Record<'CUTTING', Bone> = {
   CUTTING: {
     id: 'CUTTING',
     width: 240,
@@ -58,15 +59,20 @@ export type NodeMain = {
   children: Node[];
 };
 
-type NodeLock = { id: number; type: Type.LOCK; offset: number };
+type NodeLock = {
+  id: number;
+  type: Type.LOCK;
+  offset: number;
+  // no children
+};
 
-type NodeArea = {
+type NodeFlex = {
   id: number;
   type: Type.FLEX;
-  flow?: Flow;
+  flow: Flow;
   size: number;
   grow: number;
-  children?: Node[];
+  children: Node[];
 };
 
 type NodeGrid = {
@@ -79,141 +85,39 @@ type NodeGrid = {
   children: Node[];
 };
 
-type NodePipe = { id: number; type: Type.PIPE; pipe: Pipe };
-
-type NodeBone = { id: number; type: Type.BONE; bone: Bone };
-
-export type Node =
-  | NodeMain
-  | NodeLock
-  | NodeArea
-  | NodeGrid
-  | NodePipe
-  | NodeBone;
-
-const now = Date.now();
-
-export const data: NodeMain = {
-  id: now,
-  type: Type.MAIN,
-  flow: Flow.L2R,
-  width: 1800,
-  height: 2400,
-  children: [
-    { id: now + 1, type: Type.LOCK, offset: 0 },
-    {
-      id: now + 2,
-      type: Type.FLEX,
-      flow: Flow.T2B,
-      size: 0,
-      grow: 1,
-      children: [
-        {
-          id: now + 3,
-          type: Type.PIPE,
-          pipe: Pipe.W5H5,
-        },
-        {
-          id: now + 4,
-          type: Type.FLEX,
-          flow: Flow.L2R,
-          size: 0,
-          grow: 1,
-          children: [
-            {
-              id: now + 6,
-              type: Type.PIPE,
-              pipe: Pipe.W5H5,
-            },
-            {
-              id: now + 7,
-              type: Type.FLEX,
-              size: 0,
-              grow: 1,
-              flow: Flow.T2B,
-              children: [
-                {
-                  id: now + 9,
-                  type: Type.FLEX,
-                  size: 0,
-                  grow: 2,
-                  flow: Flow.L2R,
-                  children: [
-                    {
-                      id: now + 14,
-                      type: Type.FLEX,
-                      size: 0,
-                      grow: 1,
-                    },
-                    {
-                      id: now + 15,
-                      type: Type.PIPE,
-                      pipe: Pipe.W5H5,
-                    },
-                    {
-                      id: now + 16,
-                      type: Type.FLEX,
-                      size: 0,
-                      grow: 1,
-                    },
-                    {
-                      id: now + 17,
-                      type: Type.PIPE,
-                      pipe: Pipe.W5H5,
-                    },
-                    {
-                      id: now + 18,
-                      type: Type.FLEX,
-                      size: 0,
-                      grow: 1,
-                    },
-                  ],
-                },
-                {
-                  id: now + 10,
-                  type: Type.PIPE,
-                  pipe: Pipe.W5H5,
-                },
-                {
-                  id: now + 11,
-                  type: Type.FLEX,
-                  size: 0,
-                  grow: 1,
-                },
-                {
-                  id: now + 12,
-                  type: Type.PIPE,
-                  pipe: Pipe.W5H5,
-                },
-                {
-                  id: now + 13,
-                  type: Type.FLEX,
-                  size: 0,
-                  grow: 2,
-                },
-              ],
-            },
-            {
-              id: now + 8,
-              type: Type.PIPE,
-              pipe: Pipe.W5H5,
-            },
-          ],
-        },
-        {
-          id: now + 5,
-          type: Type.PIPE,
-          pipe: Pipe.W5H5,
-        },
-      ],
-    },
-  ],
+type NodeArea = {
+  id: number;
+  type: Type.AREA;
+  size: number;
+  grow: number;
+  // no children
 };
 
-export function lockwidth(data: NodeMain) {
+type NodePipe = {
+  id: number;
+  type: Type.PIPE;
+  pipe: Pipe;
+  // no children
+};
+
+type NodeBone = {
+  id: number;
+  type: Type.BONE;
+  bone: Bone;
+  // no children
+};
+
+// children
+export type NodeTree = NodeMain | NodeGrid | NodeFlex;
+// no children
+export type NodeLeaf = NodeLock | NodeArea | NodePipe | NodeBone;
+
+export type Node = NodeTree | NodeLeaf;
+
+export function lockwidth(root: NodeMain) {
   const barheight = (nodes: Node[]): number => {
     return nodes.reduce((a, node) => {
-      const { children, pipe } = node as NodeArea & NodePipe;
+      const { children, pipe } = node as NodeFlex & NodePipe;
       if (children && children.length > 0) {
         return Math.max(a, barheight(children));
       } else if (pipe && pipe.height > 0) {
@@ -223,37 +127,26 @@ export function lockwidth(data: NodeMain) {
       }
     }, 0);
   };
-  const { width, children } = data;
+  const { width, children } = root;
   const height = barheight(children);
-  const lock = children.find(({ type }) => type == Type.LOCK) as NodeLock;
+  const lock = children.find(({ type }) => type === Type.LOCK) as NodeLock;
   const square = (width - height) * (width + height);
   return Math.ceil(width - Math.sqrt(square)) + lock.offset;
 }
 
-export function listPath(node: NodeMain, id: number): Node[] {
-  if (node.id === id) return [node];
-  for (const n of node.children || []) {
-    const path = listPath(n as NodeMain, id);
-    if (path.length) {
-      return [...path, node];
+export function findNode(root: Node, childId: number): Node[] {
+  const { id, children = [] } = root as NodeTree;
+  if (id === childId) return [root];
+  for (const node of children) {
+    const list = findNode(node, childId);
+    if (list.length) {
+      return list.concat(root);
     }
   }
   return [];
 }
 
-export function nodeContains(
-  main: NodeMain,
-  childId: number,
-  includeSelf = true
-) {
-  if (includeSelf && main.id === childId) return true;
-  const contains = (parent: NodeMain) => {
-    for (const child of parent.children || []) {
-      if (child.id === childId || contains(child as NodeMain)) {
-        return true;
-      }
-    }
-    return false;
-  };
-  return contains(main);
+export function containNode(root: Node, childId: number): boolean {
+  const { id, children = [] } = root as NodeTree;
+  return id === childId || children.some(node => containNode(node, childId));
 }

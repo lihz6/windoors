@@ -23,8 +23,8 @@ import withPath from '_base/withPath';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGrid';
-import { data, NodeMain, Node, Type, listPath, nodeContains } from './struct';
-import tree from '_util/_tree';
+import { NodeMain, Node, findNode, containNode } from './struct';
+import { data } from './data';
 import useScale from './useScale';
 import { getData } from './fetch';
 import './style.scss';
@@ -45,11 +45,11 @@ export default withPath('/x000/draw', {}, {})(
     const [focusId, setFocusId] = useState(-1);
     const onNodeClick = (event: SyntheticEvent, node: Node) => {
       event.stopPropagation();
-      const list = listPath(mainNode, focusId);
-      if (list.length < 3 || !nodeContains(list[0] as NodeMain, node.id)) {
-        setFocusId(node.id);
+      const [current, parent, ...list] = findNode(mainNode, focusId);
+      if (list.length && containNode(current, node.id)) {
+        setFocusId(parent.id);
       } else {
-        setFocusId(list[1].id);
+        setFocusId(node.id);
       }
     };
 
@@ -73,18 +73,20 @@ export default withPath('/x000/draw', {}, {})(
             maxScale={maxScale}
             scale={scale}
           />
+          {/* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */}
           <DrawGrid squared={9} />
           <Collapse bordered={false} defaultActiveKey={['1']}>
-            <Collapse.Panel header="墙面大小" key="1">
-              墙面大小
+            <Collapse.Panel header="框体设置" key="1">
+              框体宽高·开口位置·开口留白
             </Collapse.Panel>
-            <Collapse.Panel header="开口位置" key="2">
-              开口位置
-            </Collapse.Panel>
-            <Collapse.Panel header="其他设置" key="3">
+            <Collapse.Panel header="其他设置" key="2">
               其他设置
             </Collapse.Panel>
+            <Collapse.Panel header="出料清单" key="3">
+              出料清单
+            </Collapse.Panel>
           </Collapse>
+          {/* 保存·打印 */}
         </div>
       </div>
     );

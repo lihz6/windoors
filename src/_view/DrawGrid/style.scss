@@ -22,15 +22,15 @@
 .draw-grid {
   &-main {
     margin: 0 auto;
-    width: 160px;
-    height: 160px;
+    width: 200px;
+    height: 200px;
     display: grid;
     background: #eee;
     gap: 1px;
     border: 1px solid #eee;
   }
   &-item {
-    transition: 400ms;
+    transition: 200ms;
     background: white;
     &-selected {
       background: pink;
