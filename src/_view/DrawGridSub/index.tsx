@@ -17,9 +17,7 @@ import React, {
 } from 'react';
 // import { Link } from 'react-router-dom';
 // import { Icon } from 'antd';
-import chunk from 'lodash/chunk';
-import zip from 'lodash/zip';
-// import { tree } from '_util';
+import { gridTemplateAreas } from '_util';
 
 import DrawGrid, { inSquared } from '../DrawGrid';
 
@@ -63,9 +61,7 @@ export default function DrawGridSub({
         gridRowStart: startrc[0] + 1,
         gridColumnEnd: endrc[1] + 2,
         gridRowEnd: endrc[0] + 2,
-        gridTemplateAreas: chunk(area, col)
-          .map(row => `"${row.map(a => `a${a}`).join(' ')}"`)
-          .join(' '),
+        gridTemplateAreas: gridTemplateAreas(area, col),
       }}>
       {area
         .filter((a, i) => a === i)

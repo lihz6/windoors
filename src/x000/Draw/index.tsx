@@ -23,15 +23,18 @@ import withPath from '_base/withPath';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGrid';
-import { NodeMain, Node, findNode, containNode } from './struct';
+import DrawMenu from '_view/DrawMenu';
+import { NodeMain, Node, findNode, containNode, Type } from './struct';
 import { data } from './data';
 import useScale from './useScale';
+import useFocus from './useFocus';
 import { getData } from './fetch';
 import './style.scss';
 
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
     const [mainNode, setMainNode] = useState<NodeMain>(data);
+    const { focusNode, innerNode, onNodeFocus } = useFocus(mainNode);
     const canvas = useRef<HTMLDivElement>(null);
     const {
       setMinScale,
@@ -42,23 +45,12 @@ export default withPath('/x000/draw', {}, {})(
       offset,
       scale,
     } = useScale(mainNode, canvas);
-    const [focusId, setFocusId] = useState(-1);
-    const onNodeClick = (event: SyntheticEvent, node: Node) => {
-      event.stopPropagation();
-      const [current, parent, ...list] = findNode(mainNode, focusId);
-      if (list.length && containNode(current, node.id)) {
-        setFocusId(parent.id);
-      } else {
-        setFocusId(node.id);
-      }
-    };
-
     return (
       <div className="draw-main">
         <div className="draw-canvas" ref={canvas} tabIndex={0}>
           <DrawNode
-            onClick={onNodeClick}
-            focusId={focusId}
+            onClick={onNodeFocus}
+            focusId={focusNode ? focusNode.id : -1}
             offset={offset}
             scale={scale}
             mainNode={mainNode}
@@ -74,7 +66,11 @@ export default withPath('/x000/draw', {}, {})(
             scale={scale}
           />
           {/* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */}
-          <DrawGrid squared={9} />
+          <DrawMenu />
+          <DrawGrid
+            squared={9}
+            disabled={!innerNode || innerNode.type !== Type.AREA}
+          />
           <Collapse bordered={false} defaultActiveKey={['1']}>
             <Collapse.Panel header="框体设置" key="1">
               框体宽高·开口位置·开口留白

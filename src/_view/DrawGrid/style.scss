@@ -25,9 +25,12 @@
     width: 200px;
     height: 200px;
     display: grid;
-    background: #eee;
+    background: gray;
     gap: 1px;
-    border: 1px solid #eee;
+    border: 1px solid gray;
+    &-disabled {
+      opacity: 0.24;
+    }
   }
   &-item {
     transition: 200ms;
@@ -37,11 +40,19 @@
     }
   }
   &-move {
-    background: #eee;
+    background: white;
     width: 5px;
     height: 5px;
     position: absolute;
     right: 0;
     bottom: 0;
+  }
+  &-okay {
+    background: pink;
+    width: 8px;
+    height: 8px;
+    position: absolute;
+    right: -9px;
+    bottom: -9px;
   }
 }

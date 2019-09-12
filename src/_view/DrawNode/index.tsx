@@ -11,7 +11,7 @@ import React, { ReactNode, ReactEventHandler, SyntheticEvent } from 'react';
 // import { Link } from 'react-router-dom';
 // import { Icon } from 'antd';
 // import chunk from 'lodash/chunk';
-import { tree } from '_util';
+import { tree, gridTemplateAreas, gridTemplateStyle } from '_util';
 import { NodeMain, Node, Type, lockwidth } from '../../x000/Draw/struct';
 
 import './style.scss';
@@ -73,7 +73,7 @@ function render(
         <div
           {...props}
           style={{
-            flex: `0 0 ${node.offset + lockwidth(main as NodeMain)}px`,
+            flex: `0 0 ${lockwidth(main as NodeMain)}px`,
             // flex: `0 0 0.5%`,
             background: 'white',
           }}
@@ -87,6 +87,19 @@ function render(
             display: 'flex',
             flexDirection: node.flow,
             flex: `${node.grow} ${node.grow} ${node.size}px`,
+          }}>
+          {node.children.map(child => render(child, node, focusId, onClick))}
+        </div>
+      );
+    case Type.GRID:
+      return (
+        <div
+          {...props}
+          style={{
+            display: 'grid',
+            flex: `${node.grow} ${node.grow} ${node.size}px`,
+            gridTemplateAreas: gridTemplateAreas(node.area, node.column),
+            ...gridTemplateStyle(node.template, node.column),
           }}>
           {node.children.map(child => render(child, node, focusId, onClick))}
         </div>

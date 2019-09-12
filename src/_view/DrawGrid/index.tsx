@@ -18,6 +18,7 @@ import './style.scss';
 
 export interface DrawGridProps {
   squared: number;
+  disabled: boolean;
 }
 
 interface DrawGridState {
@@ -62,9 +63,9 @@ export default class DrawGrid extends React.PureComponent<
     document.removeEventListener('mouseup', this.onMouseUp);
   }
   children(): [React.ReactChild | null, number[]] {
-    const { squared } = this.props;
+    const { squared, disabled } = this.props;
     const { start, end, ondown, area } = this.state;
-    if (start < 0 || end < 0 || ondown) {
+    if (disabled || start < 0 || end < 0 || ondown) {
       const indices = Array.from({ length: squared * squared }).map(
         (_, index) => index
       );
@@ -80,9 +81,17 @@ export default class DrawGrid extends React.PureComponent<
         endrc={erc}
         area={area}>
         <div
+          title="移动"
           className="draw-grid-move"
           onMouseDown={() => {
             this.setState({ ondown: true });
+          }}
+        />
+        <div
+          title="完成"
+          className="draw-grid-okay"
+          onMouseDown={() => {
+            console.log('Okay');
           }}
         />
       </DrawGridSub>
@@ -123,14 +132,15 @@ export default class DrawGrid extends React.PureComponent<
   };
   onMouseDown = (index: number) => {
     // Step 1
+    if (this.props.disabled) return;
     this.setState({ ondown: true, start: index, end: index });
   };
   render() {
-    const { squared } = this.props;
+    const { squared, disabled } = this.props;
     const [elem, indices] = this.children();
     return (
       <div
-        className="draw-grid-main"
+        className={tree({ 'draw-grid-main': { disabled } })}
         style={{
           gridTemplateColumns: `repeat(${squared}, 1fr)`,
           gridTemplateRows: `repeat(${squared}, 1fr)`,

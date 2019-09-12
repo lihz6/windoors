@@ -29,4 +29,11 @@
       opacity: 0.618;
     }
   }
+  &-grid {
+    @for $i from 0 to 81 {
+      & > :nth-child(#{1 + $i}) {
+        grid-area: a#{$i};
+      }
+    }
+  }
 }

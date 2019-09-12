@@ -62,7 +62,6 @@ export type NodeMain = {
 type NodeLock = {
   id: number;
   type: Type.LOCK;
-  offset: number;
   // no children
 };
 
@@ -78,10 +77,11 @@ type NodeFlex = {
 type NodeGrid = {
   id: number;
   type: Type.GRID;
-  squared: number;
-  start: number;
-  end: number;
+  size: number;
+  grow: number;
+  column: number;
   area: number[];
+  template: number[];
   children: Node[];
 };
 
@@ -129,24 +129,38 @@ export function lockwidth(root: NodeMain) {
   };
   const { width, children } = root;
   const height = barheight(children);
-  const lock = children.find(({ type }) => type === Type.LOCK) as NodeLock;
   const square = (width - height) * (width + height);
-  return Math.ceil(width - Math.sqrt(square)) + lock.offset;
+  return Math.ceil(width - Math.sqrt(square));
 }
 
-export function findNode(root: Node, childId: number): Node[] {
+export function findNode(root: Node, childId: number): [Node, ...NodeTree[]] {
   const { id, children = [] } = root as NodeTree;
   if (id === childId) return [root];
   for (const node of children) {
-    const list = findNode(node, childId);
-    if (list.length) {
-      return list.concat(root);
+    const uplist = findNode(node, childId);
+    if (uplist.length) {
+      return uplist.concat(root) as any;
     }
   }
-  return [];
+  return [] as any;
 }
 
 export function containNode(root: Node, childId: number): boolean {
   const { id, children = [] } = root as NodeTree;
   return id === childId || children.some(node => containNode(node, childId));
+}
+
+export function frameNode(pathup: NodeTree[]): Node {
+  if (
+    // NOTE: > 2 not 1, last position is NodeMain
+    pathup.length > 2 &&
+    pathup[1].type === Type.FLEX &&
+    pathup[1].children.reduce(
+      (b, n) => b && (n.type === Type.PIPE || n.id == pathup[0].id),
+      true
+    )
+  ) {
+    return frameNode(pathup.slice(1));
+  }
+  return pathup[0];
 }
