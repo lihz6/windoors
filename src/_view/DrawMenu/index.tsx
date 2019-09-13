@@ -12,14 +12,16 @@ import React, { ReactNode, ReactEventHandler } from 'react';
 import { Button, Icon } from 'antd';
 // import chunk from 'lodash/chunk';
 // import { tree } from '_util';
+import { Node, Type } from '../../x000/Draw/struct';
 
 import './style.scss';
 
 export interface DrawMenuProps {
-  //
+  focusNode: Node | null;
+  onClick(action: 'clear'): void;
 }
 
-export default function DrawMenu({  }: DrawMenuProps) {
+export default function DrawMenu({ focusNode, onClick }: DrawMenuProps) {
   {
     /* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */
   }
@@ -31,7 +33,15 @@ export default function DrawMenu({  }: DrawMenuProps) {
         {/* <Button>上下翻</Button> */}
         {/* <Button>去焦</Button> */}
         <Button type="default">重做</Button>
-        <Button type="default">删除</Button>
+        <Button
+          type="default"
+          disabled={
+            !focusNode ||
+            (focusNode.type !== Type.FLEX && focusNode.type !== Type.GRID)
+          }
+          onClick={() => onClick('clear')}>
+          清空
+        </Button>
         <Button type="default">全屏</Button>
         <Button type="default">插入</Button>
         <Button type="primary">视角</Button>

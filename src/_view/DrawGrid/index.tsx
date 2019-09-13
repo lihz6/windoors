@@ -19,6 +19,7 @@ import './style.scss';
 export interface DrawGridProps {
   squared: number;
   disabled: boolean;
+  onDone(column: number, area: number[]): void;
 }
 
 interface DrawGridState {
@@ -63,7 +64,7 @@ export default class DrawGrid extends React.PureComponent<
     document.removeEventListener('mouseup', this.onMouseUp);
   }
   children(): [React.ReactChild | null, number[]] {
-    const { squared, disabled } = this.props;
+    const { squared, disabled, onDone } = this.props;
     const { start, end, ondown, area } = this.state;
     if (disabled || start < 0 || end < 0 || ondown) {
       const indices = Array.from({ length: squared * squared }).map(
@@ -91,7 +92,7 @@ export default class DrawGrid extends React.PureComponent<
           title="完成"
           className="draw-grid-okay"
           onMouseDown={() => {
-            console.log('Okay');
+            onDone(col, area);
           }}
         />
       </DrawGridSub>

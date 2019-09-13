@@ -21,7 +21,7 @@ export interface DrawNodeProps {
   focusId: number;
   scale: number;
   offset: [number, number];
-  onClick(event: SyntheticEvent, node: Node): void;
+  onClick(node: Node): void;
 }
 
 // TODO: https://github.com/clauderic/react-sortable-hoc
@@ -108,7 +108,7 @@ function render(
       return (
         <div
           {...props}
-          onClick={event => onClick(event, node)}
+          onClick={() => onClick(node)}
           style={{
             flex: `${node.grow} ${node.grow} ${node.size}px`,
           }}
@@ -119,7 +119,7 @@ function render(
       return (
         <div
           {...props}
-          onClick={event => onClick(event, node)}
+          onClick={() => onClick(node)}
           style={{
             flex: `0 0 ${node.pipe.width}px`,
             // background: 'linear-gradient(45deg, #777, #aaa, #777)',
@@ -132,7 +132,7 @@ function render(
       return (
         <div
           {...props}
-          onClick={event => onClick(event, node)}
+          onClick={() => onClick(node)}
           style={{
             width: `${node.bone.width}px`,
             height: `${node.bone.height}px`,

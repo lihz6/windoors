@@ -13,7 +13,7 @@ export enum Flow {
   L2R = 'row',
 }
 
-interface Pipe {
+export interface Pipe {
   id: string;
   width: number;
   height: number;
@@ -34,7 +34,8 @@ export const Pipe: Record<'W5H5' | 'W3H3', Pipe> = {
     color: 'gray',
   },
 };
-interface Bone {
+
+export interface Bone {
   id: string;
   width: number;
   height: number;
@@ -59,13 +60,13 @@ export type NodeMain = {
   children: Node[];
 };
 
-type NodeLock = {
+export type NodeLock = {
   id: number;
   type: Type.LOCK;
   // no children
 };
 
-type NodeFlex = {
+export type NodeFlex = {
   id: number;
   type: Type.FLEX;
   flow: Flow;
@@ -74,7 +75,7 @@ type NodeFlex = {
   children: Node[];
 };
 
-type NodeGrid = {
+export type NodeGrid = {
   id: number;
   type: Type.GRID;
   size: number;
@@ -85,7 +86,7 @@ type NodeGrid = {
   children: Node[];
 };
 
-type NodeArea = {
+export type NodeArea = {
   id: number;
   type: Type.AREA;
   size: number;
@@ -93,14 +94,14 @@ type NodeArea = {
   // no children
 };
 
-type NodePipe = {
+export type NodePipe = {
   id: number;
   type: Type.PIPE;
   pipe: Pipe;
   // no children
 };
 
-type NodeBone = {
+export type NodeBone = {
   id: number;
   type: Type.BONE;
   bone: Bone;
@@ -156,11 +157,60 @@ export function frameNode(pathup: NodeTree[]): Node {
     pathup.length > 2 &&
     pathup[1].type === Type.FLEX &&
     pathup[1].children.reduce(
-      (b, n) => b && (n.type === Type.PIPE || n.id == pathup[0].id),
+      (b, n) => b && (n.type === Type.PIPE || n.id === pathup[0].id),
       true
     )
   ) {
     return frameNode(pathup.slice(1));
   }
   return pathup[0];
+}
+
+function treeNode<T extends NodeTree>(
+  root: T,
+  handle: (node: Node) => Node
+): T {
+  const newNode = handle(root);
+  if (newNode !== root) {
+    return newNode as T;
+  }
+  if (!root.children) return root;
+  const [children, changed] = root.children.reduce<[Node[], boolean]>(
+    ([children, changed], child) => {
+      const newChild = treeNode(child as T, handle);
+      children.push(newChild);
+      return [children, changed || child !== newChild];
+    },
+    [[], false]
+  );
+  return changed ? { ...root, children } : root;
+}
+
+export function replaceNode<T extends NodeTree>(
+  root: T,
+  oldNode: Node,
+  newNode: Node
+): T {
+  return treeNode(root, node => (node.id === oldNode.id ? newNode : node));
+}
+
+export function clearNode<T extends NodeTree>(root: T, clearId: number): T {
+  return treeNode(root, node => {
+    if (node.id !== clearId) {
+      return node;
+    }
+    switch (node.type) {
+      case Type.GRID:
+      case Type.FLEX:
+        return {
+          id: node.id,
+          type: Type.AREA,
+          size: node.size,
+          grow: node.grow,
+          // no children
+        };
+      default:
+        return node;
+    }
+  });
 }

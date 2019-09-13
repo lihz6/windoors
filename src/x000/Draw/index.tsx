@@ -26,6 +26,7 @@ import DrawGrid from '_view/DrawGrid';
 import DrawMenu from '_view/DrawMenu';
 import { NodeMain, Node, findNode, containNode, Type } from './struct';
 import { data } from './data';
+import useMnode from './useMnode';
 import useScale from './useScale';
 import useFocus from './useFocus';
 import { getData } from './fetch';
@@ -33,9 +34,9 @@ import './style.scss';
 
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
-    const [mainNode, setMainNode] = useState<NodeMain>(data);
-    const { focusNode, innerNode, onNodeFocus } = useFocus(mainNode);
     const canvas = useRef<HTMLDivElement>(null);
+    const { mainNode, addFromGrid, clearNodeById } = useMnode();
+    const { focusNode, innerNode, setFocusNode } = useFocus(mainNode);
     const {
       setMinScale,
       setMaxScale,
@@ -49,7 +50,7 @@ export default withPath('/x000/draw', {}, {})(
       <div className="draw-main">
         <div className="draw-canvas" ref={canvas} tabIndex={0}>
           <DrawNode
-            onClick={onNodeFocus}
+            onClick={setFocusNode}
             focusId={focusNode ? focusNode.id : -1}
             offset={offset}
             scale={scale}
@@ -66,10 +67,24 @@ export default withPath('/x000/draw', {}, {})(
             scale={scale}
           />
           {/* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */}
-          <DrawMenu />
+          <DrawMenu
+            focusNode={focusNode}
+            onClick={action => {
+              switch (action) {
+                case 'clear':
+                  clearNodeById(focusNode ? focusNode.id : -1);
+                  setFocusNode(null);
+              }
+            }}
+          />
           <DrawGrid
+            key={(innerNode && innerNode.id) || -1}
             squared={9}
             disabled={!innerNode || innerNode.type !== Type.AREA}
+            onDone={(column, area) => {
+              addFromGrid(innerNode, column, area);
+              setFocusNode(null);
+            }}
           />
           <Collapse bordered={false} defaultActiveKey={['1']}>
             <Collapse.Panel header="框体设置" key="1">

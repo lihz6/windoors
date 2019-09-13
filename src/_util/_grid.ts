@@ -13,11 +13,11 @@ export function gridTemplateStyle(
 ): CSSProperties {
   return {
     gridTemplateRows: template
-      .slice(0, column)
+      .slice(column)
       .map((value, index) => (index % 2 ? `${value}px` : `${value}fr`))
       .join(' '),
     gridTemplateColumns: template
-      .slice(column)
+      .slice(0, column)
       .map((value, index) => (index % 2 ? `${value}px` : `${value}fr`))
       .join(' '),
   };
