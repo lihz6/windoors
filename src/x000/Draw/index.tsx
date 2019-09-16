@@ -18,14 +18,13 @@ import React, {
 } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
-import { Icon, Slider, Collapse } from 'antd';
+import { Collapse } from 'antd';
 import withPath from '_base/withPath';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGrid';
 import DrawMenu from '_view/DrawMenu';
-import { NodeMain, Node, findNode, containNode, Type } from './struct';
-import { data } from './data';
+import { Type } from './struct';
 import useMnode from './useMnode';
 import useScale from './useScale';
 import useFocus from './useFocus';
@@ -35,7 +34,13 @@ import './style.scss';
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
     const canvas = useRef<HTMLDivElement>(null);
-    const { mainNode, addFromGrid, clearNodeById } = useMnode();
+    const {
+      mainNode,
+      addFromGrid,
+      clearNodeById,
+      deleteNodeById,
+      duplicateNodeById,
+    } = useMnode();
     const { focusNode, innerNode, setFocusNode } = useFocus(mainNode);
     const {
       setMinScale,
@@ -51,7 +56,7 @@ export default withPath('/x000/draw', {}, {})(
         <div className="draw-canvas" ref={canvas} tabIndex={0}>
           <DrawNode
             onClick={setFocusNode}
-            focusId={focusNode ? focusNode.id : -1}
+            focusId={focusNode.length && focusNode[0].id}
             offset={offset}
             scale={scale}
             mainNode={mainNode}
@@ -66,23 +71,28 @@ export default withPath('/x000/draw', {}, {})(
             maxScale={maxScale}
             scale={scale}
           />
-          {/* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */}
           <DrawMenu
             focusNode={focusNode}
-            onClick={action => {
+            onClick={(action, node) => {
               switch (action) {
                 case 'clear':
-                  clearNodeById(focusNode ? focusNode.id : -1);
-                  setFocusNode(null);
+                  clearNodeById(node.id);
+                  return setFocusNode(null);
+                case 'delete':
+                  deleteNodeById(node.id);
+                  return setFocusNode(null);
+                case 'duplicate':
+                  duplicateNodeById(node.id);
+                  return setFocusNode(null);
               }
             }}
           />
           <DrawGrid
-            key={(innerNode && innerNode.id) || -1}
+            key={innerNode.length && innerNode[0].id}
             squared={9}
-            disabled={!innerNode || innerNode.type !== Type.AREA}
+            disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
             onDone={(column, area) => {
-              addFromGrid(innerNode, column, area);
+              addFromGrid(innerNode[0], column, area);
               setFocusNode(null);
             }}
           />

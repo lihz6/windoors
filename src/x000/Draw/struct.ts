@@ -53,6 +53,9 @@ export const Bone: Record<'CUTTING', Bone> = {
 
 export type NodeMain = {
   id: number;
+  title: string;
+  author: string;
+  version: number;
   type: Type.MAIN;
   flow: Flow.L2R;
   width: number;
@@ -105,6 +108,8 @@ export type NodeBone = {
   id: number;
   type: Type.BONE;
   bone: Bone;
+  size: number;
+  grow: number;
   // no children
 };
 
@@ -151,7 +156,7 @@ export function containNode(root: Node, childId: number): boolean {
   return id === childId || children.some(node => containNode(node, childId));
 }
 
-export function frameNode(pathup: NodeTree[]): Node {
+export function frameNode(pathup: NodeTree[]): Node[] {
   if (
     // NOTE: > 2 not 1, last position is NodeMain
     pathup.length > 2 &&
@@ -163,7 +168,7 @@ export function frameNode(pathup: NodeTree[]): Node {
   ) {
     return frameNode(pathup.slice(1));
   }
-  return pathup[0];
+  return pathup;
 }
 
 function treeNode<T extends NodeTree>(
@@ -202,6 +207,7 @@ export function clearNode<T extends NodeTree>(root: T, clearId: number): T {
     switch (node.type) {
       case Type.GRID:
       case Type.FLEX:
+      case Type.BONE:
         return {
           id: node.id,
           type: Type.AREA,
@@ -212,5 +218,63 @@ export function clearNode<T extends NodeTree>(root: T, clearId: number): T {
       default:
         return node;
     }
+  });
+}
+
+export function deleteNode<T extends NodeTree>(root: T, deleteId: number): T {
+  return treeNode(root, node => {
+    if (
+      node.type !== Type.FLEX ||
+      node.children.every(({ id }) => id !== deleteId)
+    ) {
+      return node;
+    }
+    const index = node.children.findIndex(({ id }) => id === deleteId);
+    const children = node.children.slice();
+    children.splice(index && index - 1, 2);
+    if (children.length === 1) {
+      return { ...children[0], size: node.size, grow: node.grow };
+    }
+    return {
+      ...node,
+      children,
+    };
+  });
+}
+
+export function duplicate<T extends Node>(
+  root: T,
+  newId: (oldId: number) => number
+): T {
+  const newNode = { ...root, id: newId(root.id) };
+  if (root['children']) {
+    newNode['children'] = root['children'].map(node => duplicate(node, newId));
+  }
+  return newNode;
+}
+
+export function duplicateNode<T extends NodeTree>(
+  root: T,
+  duplicateId: number,
+  newId: (oldId: number) => number
+): T {
+  return treeNode(root, node => {
+    if (
+      node.type !== Type.FLEX ||
+      node.children.every(({ id }) => id !== duplicateId)
+    ) {
+      return node;
+    }
+    const index = node.children.findIndex(({ id }) => id === duplicateId);
+    const children = node.children.slice();
+    const startIndex = index && index - 1;
+    const dups = children
+      .slice(startIndex, startIndex + 2)
+      .map(node => duplicate(node, newId));
+    children.splice(startIndex, 0, ...dups);
+    return {
+      ...node,
+      children,
+    };
   });
 }

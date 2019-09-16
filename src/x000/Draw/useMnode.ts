@@ -11,31 +11,55 @@ import {
   Pipe,
   replaceNode,
   clearNode,
+  deleteNode,
+  duplicateNode,
   NodeGrid,
   NodeArea,
 } from './struct';
 import { data } from './data';
 import chunk from 'lodash/chunk';
-export default function useMnode() {
+export interface UseMnode {
+  addFromGrid(node: Node | null, column: number, area: number[]): void;
+  duplicateNodeById(clearId: number): void;
+  deleteNodeById(deleteId: number): void;
+  clearNodeById(clearId: number): void;
+  mainNode: NodeMain;
+}
+export default function useMnode(): UseMnode {
   const newId = useRef(Date.now() + 10000);
   const [mainNode, setMainNode] = useState<NodeMain>(data);
-  const addFromGrid = (node: Node | null, column: number, area: number[]) => {
+  const addFromGrid: UseMnode['addFromGrid'] = (node, column, area) => {
     if (
       !node ||
       node.type !== Type.AREA ||
       column < 1 ||
       column > area.length
     ) {
-      return node;
+      return;
     }
     setMainNode(
       replaceNode(mainNode, node, newNodeOf(node, column, area, newId))
     );
   };
-  const clearNodeById = (clearId: number) => {
+  const clearNodeById: UseMnode['clearNodeById'] = clearId => {
     setMainNode(clearNode(mainNode, clearId));
   };
-  return { mainNode, addFromGrid, clearNodeById };
+  const deleteNodeById: UseMnode['deleteNodeById'] = (deleteId: number) => {
+    setMainNode(deleteNode(mainNode, deleteId));
+  };
+  const duplicateNodeById: UseMnode['deleteNodeById'] = (
+    duplicateId: number
+  ) => {
+    setMainNode(duplicateNode(mainNode, duplicateId, () => newId.current--));
+  };
+
+  return {
+    mainNode,
+    addFromGrid,
+    clearNodeById,
+    deleteNodeById,
+    duplicateNodeById,
+  };
 }
 
 function newNodeOf(
@@ -47,7 +71,7 @@ function newNodeOf(
   if (column === 1 || column === area.length) {
     const newNode: NodeFlex = {
       ...node,
-      id: newId.current++,
+      id: newId.current--,
       type: Type.FLEX,
       flow: column === 1 ? Flow.T2B : Flow.L2R,
       children: area
@@ -67,13 +91,13 @@ function newNodeOf(
           (a, b, i) => {
             if (i !== 0) {
               a.push({
-                id: newId.current++,
+                id: newId.current--,
                 type: Type.PIPE,
                 pipe: Pipe['W5H5'],
               });
             }
             a.push({
-              id: newId.current++,
+              id: newId.current--,
               type: Type.AREA,
               size: 0,
               grow: b,
@@ -105,7 +129,7 @@ function newNodeOf(
   }
   const newNode: NodeGrid = {
     ...node,
-    id: newId.current++,
+    id: newId.current--,
     type: Type.GRID,
     column: column * 2,
     template: Array.from({ length: (column + chunks.length) * 2 }).map(
@@ -119,7 +143,7 @@ function newNodeOf(
     children: area
       .filter((a, i) => a === i)
       .map(() => ({
-        id: newId.current++,
+        id: newId.current--,
         type: Type.AREA,
         grow: 0,
         size: 0,

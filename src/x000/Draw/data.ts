@@ -3,6 +3,9 @@ const now = Date.now();
 
 export const data: NodeMain = {
   id: now,
+  title: 'Render Testing',
+  author: 'lihzhang',
+  version: 1,
   type: Type.MAIN,
   flow: Flow.L2R,
   width: 1800,
