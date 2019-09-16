@@ -21,15 +21,15 @@
 
 .draw-grid {
   &-main {
-    margin: 0 auto;
-    width: 200px;
-    height: 200px;
+    // margin: 0 auto;
+    // width: 200px;
+    // height: 200px;
     display: grid;
     background: gray;
     gap: 1px;
-    border: 1px solid gray;
+    // border: 1px solid gray;
     &-disabled {
-      opacity: 0.24;
+      opacity: 0.382;
     }
   }
   &-item {

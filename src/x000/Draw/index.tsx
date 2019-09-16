@@ -22,7 +22,7 @@ import { Collapse } from 'antd';
 import withPath from '_base/withPath';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
-import DrawGrid from '_view/DrawGrid';
+import DrawGrid from '_view/DrawGridBox';
 import DrawMenu from '_view/DrawMenu';
 import { Type } from './struct';
 import useMnode from './useMnode';
@@ -89,7 +89,12 @@ export default withPath('/x000/draw', {}, {})(
           />
           <DrawGrid
             key={innerNode.length && innerNode[0].id}
-            squared={9}
+            borderless={false}
+            borderdata={{ top: true }}
+            onBorderClick={(border, hasEnabled) => {
+              console.log(border, hasEnabled);
+            }}
+            squared={12}
             disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
             onDone={(column, area) => {
               addFromGrid(innerNode[0], column, area);
