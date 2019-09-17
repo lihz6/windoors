@@ -20,9 +20,11 @@
 // `box-shadow`: $box-shadow
 
 .draw-node {
-  // &-main {
-  //   padding: 8px;
-  // }
+  &-main {
+    display: flex;
+    transform-origin: center;
+    box-sizing: content-box;
+  }
   &-focus {
     background: pink !important;
     & > div {

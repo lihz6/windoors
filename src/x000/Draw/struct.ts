@@ -231,7 +231,11 @@ export function deleteNode<T extends NodeTree>(root: T, deleteId: number): T {
     }
     const index = node.children.findIndex(({ id }) => id === deleteId);
     const children = node.children.slice();
-    children.splice(index && index - 1, 2);
+    if (children[index].type === Type.PIPE) {
+      children.splice(index, 1);
+    } else {
+      children.splice(index && index - 1, 2);
+    }
     if (children.length === 1) {
       return { ...children[0], size: node.size, grow: node.grow };
     }

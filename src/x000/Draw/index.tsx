@@ -33,88 +33,104 @@ import './style.scss';
 
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
-    const canvas = useRef<HTMLDivElement>(null);
-    const {
-      mainNode,
-      addFromGrid,
-      clearNodeById,
-      deleteNodeById,
-      duplicateNodeById,
-    } = useMnode();
-    const { focusNode, innerNode, setFocusNode } = useFocus(mainNode);
-    const {
-      setMinScale,
-      setMaxScale,
-      setScale,
-      minScale,
-      maxScale,
-      offset,
-      scale,
-    } = useScale(mainNode, canvas);
     return (
-      <div className="draw-main">
-        <div className="draw-canvas" ref={canvas} tabIndex={0}>
-          <DrawNode
-            onClick={setFocusNode}
-            focusId={focusNode.length && focusNode[0].id}
-            offset={offset}
-            scale={scale}
-            mainNode={mainNode}
-          />
-        </div>
-        <div className="draw-object">
-          <DrawScale
-            setMinScale={setMinScale}
-            setMaxScale={setMaxScale}
-            setScale={setScale}
-            minScale={minScale}
-            maxScale={maxScale}
-            scale={scale}
-          />
-          <DrawMenu
-            focusNode={focusNode}
-            onClick={(action, node) => {
-              switch (action) {
-                case 'clear':
-                  clearNodeById(node.id);
-                  return setFocusNode(null);
-                case 'delete':
-                  deleteNodeById(node.id);
-                  return setFocusNode(null);
-                case 'duplicate':
-                  duplicateNodeById(node.id);
-                  return setFocusNode(null);
-              }
-            }}
-          />
-          <DrawGrid
-            key={innerNode.length && innerNode[0].id}
-            borderless={false}
-            borderdata={{ top: true }}
-            onBorderClick={(border, hasEnabled) => {
-              console.log(border, hasEnabled);
-            }}
-            squared={12}
-            disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
-            onDone={(column, area) => {
-              addFromGrid(innerNode[0], column, area);
-              setFocusNode(null);
-            }}
-          />
-          <Collapse bordered={false} defaultActiveKey={['1']}>
-            <Collapse.Panel header="框体设置" key="1">
-              框体宽高·开口位置·开口留白
-            </Collapse.Panel>
-            <Collapse.Panel header="其他设置" key="2">
-              其他设置
-            </Collapse.Panel>
-            <Collapse.Panel header="出料清单" key="3">
-              出料清单
-            </Collapse.Panel>
-          </Collapse>
-          {/* 保存·打印 */}
-        </div>
-      </div>
+      <Draw width={1800} height={2400} author="lihzhang" title="Windoors" />
     );
   }
 );
+
+export interface DrawProps {
+  width: number;
+  height: number;
+  title: string;
+  author: string;
+}
+function Draw(props: DrawProps) {
+  const canvas = useRef<HTMLDivElement>(null);
+  const {
+    duplicateNodeById,
+    addBorderToNode,
+    deleteNodeById,
+    clearNodeById,
+    addFromGrid,
+    mainNode,
+  } = useMnode(props);
+  const { focusNode, innerNode, setFocusNode } = useFocus(mainNode);
+  const {
+    setMinScale,
+    setMaxScale,
+    setScale,
+    minScale,
+    maxScale,
+    offset,
+    scale,
+  } = useScale(mainNode, canvas);
+  return (
+    <div className="draw-main">
+      <div className="draw-canvas" ref={canvas} tabIndex={0}>
+        <DrawNode
+          onClick={setFocusNode}
+          focusId={focusNode.length && focusNode[0].id}
+          offset={offset}
+          scale={scale}
+          mainNode={mainNode}
+        />
+      </div>
+      <div className="draw-object">
+        <DrawScale
+          setMinScale={setMinScale}
+          setMaxScale={setMaxScale}
+          setScale={setScale}
+          minScale={minScale}
+          maxScale={maxScale}
+          scale={scale}
+        />
+        <DrawMenu
+          focusNode={focusNode}
+          onClick={(action, node) => {
+            switch (action) {
+              case 'duplicate':
+                return duplicateNodeById(node.id);
+              case 'delete':
+                return deleteNodeById(node.id);
+              case 'clear':
+                return clearNodeById(node.id);
+            }
+          }}
+        />
+        <DrawGrid
+          key={innerNode.length && innerNode[0].id}
+          focusNode={focusNode}
+          innerNode={innerNode}
+          onBorderClick={(border, node) => {
+            if (node) {
+              return deleteNodeById(node.id);
+            }
+            addBorderToNode(border, innerNode);
+          }}
+          squared={12}
+          disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
+          onDone={(column, area) => {
+            addFromGrid(innerNode[0], column, area);
+            // setFocusNode(null);
+          }}
+        />
+        <Collapse bordered={false} defaultActiveKey={['1']}>
+          <Collapse.Panel header="框体设置" key="1">
+            {mainNode.title}
+            {mainNode.width}
+            {mainNode.height}
+            框体宽高·开口位置·开口留白
+          </Collapse.Panel>
+          <Collapse.Panel header="其他设置" key="2">
+            其他设置
+          </Collapse.Panel>
+          <Collapse.Panel header="出料清单" key="3">
+            出料清单
+          </Collapse.Panel>
+        </Collapse>
+        {/* 保存·打印 */}
+      </div>
+    </div>
+  );
+}

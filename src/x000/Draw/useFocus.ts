@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   NodeMain,
   Node,
@@ -14,27 +14,38 @@ export default function useFocus(mainNode: NodeMain) {
     focusNode: Node[];
     innerNode: Node[];
   }>({ focusNode: [], innerNode: [] });
-  const setFocusNode = (node: Node | null) => {
+  const _setFocusNode = (node: Node | null, focusNode: Node[]) => {
     if (!node) {
-      return _setNode({ focusNode: [], innerNode: [] });
+      return { focusNode: [], innerNode: [] };
     }
     if (node.type === Type.PIPE) {
       const nodes = findNode(mainNode, node.id);
-      return _setNode({ focusNode: nodes, innerNode: nodes });
+      return { focusNode: nodes, innerNode: nodes };
     }
     const [target, ...uplist] = findNode(
       mainNode,
       focusNode.length && focusNode[0].id
     );
     if (uplist.length > 1 && containNode(target, node.id)) {
-      _setNode({ focusNode: frameNode(uplist), innerNode: uplist });
+      return { focusNode: frameNode(uplist), innerNode: uplist };
     } else {
       const nodes = findNode(mainNode, node.id);
-      _setNode({
+      return {
         focusNode: frameNode(nodes as NodeTree[]),
         innerNode: nodes,
-      });
+      };
     }
   };
+  const setFocusNode = (node: Node | null) => {
+    _setNode(_setFocusNode(node, focusNode));
+  };
+  useEffect(() => {
+    _setNode(({ focusNode, innerNode }) => {
+      if (innerNode.length) {
+        return _setFocusNode(innerNode[0], []);
+      }
+      return { focusNode, innerNode };
+    });
+  }, [mainNode]);
   return { focusNode, setFocusNode, innerNode };
 }

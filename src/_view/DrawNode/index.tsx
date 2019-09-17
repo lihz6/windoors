@@ -36,12 +36,11 @@ export default function DrawNode({
     <div
       className={tree({ 'draw-node': mainNode.type })}
       style={{
-        transformOrigin: 'center',
         transform: `translate(${x}px, ${y}px) scale(${scale / 100})`,
         width: `${mainNode.width}px`,
         height: `${mainNode.height}px`,
-        display: 'flex',
         flexDirection: mainNode.flow,
+        border: `${(1 * 100) / scale}px solid #eee`,
       }}>
       {mainNode.children.map(child =>
         render(child, mainNode, focusId, onClick)
@@ -75,7 +74,7 @@ function render(
           style={{
             flex: `0 0 ${lockwidth(main as NodeMain)}px`,
             // flex: `0 0 0.5%`,
-            background: 'white',
+            background: 'yellow',
           }}
         />
       );

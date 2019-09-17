@@ -16,18 +16,37 @@ import {
   NodeGrid,
   NodeArea,
 } from './struct';
-import { data } from './data';
 import chunk from 'lodash/chunk';
+import { DrawProps } from '.';
 export interface UseMnode {
+  addBorderToNode(
+    border: 'top' | 'right' | 'bottom' | 'left',
+    innerNode: Node[]
+  ): void;
   addFromGrid(node: Node | null, column: number, area: number[]): void;
   duplicateNodeById(clearId: number): void;
   deleteNodeById(deleteId: number): void;
   clearNodeById(clearId: number): void;
   mainNode: NodeMain;
 }
-export default function useMnode(): UseMnode {
-  const newId = useRef(Date.now() + 10000);
-  const [mainNode, setMainNode] = useState<NodeMain>(data);
+export default function useMnode(props: DrawProps): UseMnode {
+  const newId = useRef(Date.now());
+  const [mainNode, setMainNode] = useState<NodeMain>({
+    ...props,
+    version: 1,
+    id: newId.current--,
+    type: Type.MAIN,
+    flow: Flow.L2R,
+    children: [
+      { id: newId.current--, type: Type.LOCK },
+      {
+        id: newId.current--,
+        type: Type.AREA,
+        size: 0,
+        grow: 1,
+      },
+    ],
+  });
   const addFromGrid: UseMnode['addFromGrid'] = (node, column, area) => {
     if (
       !node ||
@@ -52,13 +71,48 @@ export default function useMnode(): UseMnode {
   ) => {
     setMainNode(duplicateNode(mainNode, duplicateId, () => newId.current--));
   };
-
+  const addBorderToNode = (
+    border: 'top' | 'right' | 'bottom' | 'left',
+    innerNode: Node[]
+  ) => {
+    const [oldNode, parent] = innerNode as [NodeArea, ...Node[]];
+    const borderFlow = { top: Flow.T2B, bottom: Flow.T2B }[border] || Flow.L2R;
+    const addBorderNode = (children: Node[]) => {
+      const borderNode: NodePipe = {
+        id: newId.current--,
+        type: Type.PIPE,
+        pipe: Pipe['W5H5'],
+      };
+      if (['top', 'left'].includes(border)) {
+        return [borderNode, ...children];
+      } else {
+        return [...children, borderNode];
+      }
+    };
+    if (parent.type === Type.FLEX && parent.flow === borderFlow) {
+      const newNode: NodeFlex = {
+        ...parent,
+        children: addBorderNode(parent.children),
+      };
+      return setMainNode(replaceNode(mainNode, parent, newNode));
+    }
+    const newNode: NodeFlex = {
+      id: newId.current--,
+      type: Type.FLEX,
+      size: oldNode.size || 0,
+      grow: oldNode.grow || 1,
+      flow: borderFlow,
+      children: addBorderNode([{ ...oldNode, size: 0, grow: 1 }]),
+    };
+    setMainNode(replaceNode(mainNode, oldNode, newNode));
+  };
   return {
     mainNode,
     addFromGrid,
     clearNodeById,
     deleteNodeById,
     duplicateNodeById,
+    addBorderToNode,
   };
 }
 
