@@ -18,47 +18,24 @@ import {
 } from './struct';
 import chunk from 'lodash/chunk';
 import { DrawProps } from '.';
+import { Border } from '_view/DrawGridBox';
 export interface UseMnode {
-  addBorderToNode(
-    border: 'top' | 'right' | 'bottom' | 'left',
-    innerNode: Node[]
-  ): void;
+  addBorderToNode(border: Border, innerNode: Node[]): void;
   addFromGrid(node: Node | null, column: number, area: number[]): void;
   duplicateNodeById(clearId: number): void;
   deleteNodeById(deleteId: number): void;
   clearNodeById(clearId: number): void;
+  setMainNodeData: any;
   mainNode: NodeMain;
 }
 export default function useMnode(props: DrawProps): UseMnode {
   const newId = useRef(Date.now());
-  const [mainNode, setMainNode] = useState<NodeMain>({
-    ...props,
-    version: 1,
-    id: newId.current--,
-    type: Type.MAIN,
-    flow: Flow.L2R,
-    children: [
-      { id: newId.current--, type: Type.LOCK },
-      {
-        id: newId.current--,
-        type: Type.AREA,
-        size: 0,
-        grow: 1,
-      },
-    ],
-  });
+  const [mainNode, setMainNode] = useState<NodeMain>(initMnode(props, newId));
   const addFromGrid: UseMnode['addFromGrid'] = (node, column, area) => {
-    if (
-      !node ||
-      node.type !== Type.AREA ||
-      column < 1 ||
-      column > area.length
-    ) {
-      return;
+    if (node && node.type === Type.AREA && column && column <= area.length) {
+      const newNode = newNodeOf(node, column, area, newId);
+      setMainNode(replaceNode(mainNode, node, newNode));
     }
-    setMainNode(
-      replaceNode(mainNode, node, newNodeOf(node, column, area, newId))
-    );
   };
   const clearNodeById: UseMnode['clearNodeById'] = clearId => {
     setMainNode(clearNode(mainNode, clearId));
@@ -71,49 +48,109 @@ export default function useMnode(props: DrawProps): UseMnode {
   ) => {
     setMainNode(duplicateNode(mainNode, duplicateId, () => newId.current--));
   };
-  const addBorderToNode = (
-    border: 'top' | 'right' | 'bottom' | 'left',
-    innerNode: Node[]
-  ) => {
-    const [oldNode, parent] = innerNode as [NodeArea, ...Node[]];
-    const borderFlow = { top: Flow.T2B, bottom: Flow.T2B }[border] || Flow.L2R;
-    const addBorderNode = (children: Node[]) => {
-      const borderNode: NodePipe = {
-        id: newId.current--,
-        type: Type.PIPE,
-        pipe: Pipe['W5H5'],
-      };
-      if (['top', 'left'].includes(border)) {
-        return [borderNode, ...children];
-      } else {
-        return [...children, borderNode];
-      }
-    };
-    if (parent.type === Type.FLEX && parent.flow === borderFlow) {
-      const newNode: NodeFlex = {
-        ...parent,
-        children: addBorderNode(parent.children),
-      };
-      return setMainNode(replaceNode(mainNode, parent, newNode));
-    }
-    const newNode: NodeFlex = {
-      id: newId.current--,
-      type: Type.FLEX,
-      size: oldNode.size || 0,
-      grow: oldNode.grow || 1,
-      flow: borderFlow,
-      children: addBorderNode([{ ...oldNode, size: 0, grow: 1 }]),
-    };
+  const addBorderToNode = (border: Border, innerNode: Node[]) => {
+    const [oldNode, newNode] = addBorder(border, innerNode as any, newId);
     setMainNode(replaceNode(mainNode, oldNode, newNode));
   };
-  return {
-    mainNode,
-    addFromGrid,
-    clearNodeById,
-    deleteNodeById,
-    duplicateNodeById,
-    addBorderToNode,
+  const setMainNodeData = data => {
+    setMainNode({ ...mainNode, ...data });
   };
+  return {
+    duplicateNodeById,
+    setMainNodeData,
+    addBorderToNode,
+    deleteNodeById,
+    clearNodeById,
+    addFromGrid,
+    mainNode,
+  };
+}
+
+/////////////////////////////////////////////////////////
+//                                                     //
+/////////////////// Helping Functions ///////////////////
+//                                                     //
+/////////////////////////////////////////////////////////
+
+function initMnode(
+  props: DrawProps,
+  newId: MutableRefObject<number>
+): NodeMain {
+  return {
+    ...props,
+    version: 1,
+    id: newId.current--,
+    type: Type.MAIN,
+    flow: Flow.L2R,
+    children: [
+      { id: newId.current--, type: Type.LOCK },
+      {
+        id: newId.current--,
+        type: Type.FLEX,
+        flow: Flow.L2R,
+        size: 0,
+        grow: 1,
+        children: [
+          { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+          {
+            id: newId.current--,
+            type: Type.FLEX,
+            flow: Flow.T2B,
+            size: 0,
+            grow: 1,
+            children: [
+              { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+              {
+                id: newId.current--,
+                type: Type.AREA,
+                size: 0,
+                grow: 1,
+              },
+              { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+            ],
+          },
+          { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+        ],
+      },
+    ],
+  };
+}
+
+function addBorder(
+  border: Border,
+  innerNode: [NodeArea, Node],
+  newId: MutableRefObject<number>
+): [Node, Node] {
+  const [oldNode, parent] = innerNode as [NodeArea, ...Node[]];
+  const borderFlow = { top: Flow.T2B, bottom: Flow.T2B }[border] || Flow.L2R;
+  const addBorderNode = (children: Node[]) => {
+    const borderNode: NodePipe = {
+      id: newId.current--,
+      type: Type.PIPE,
+      pipe: Pipe['W5H5'],
+    };
+    if (['top', 'left'].includes(border)) {
+      return [borderNode, ...children];
+    } else {
+      return [...children, borderNode];
+    }
+  };
+  if (parent.type === Type.FLEX && parent.flow === borderFlow) {
+    const newNode: NodeFlex = {
+      ...parent,
+      children: addBorderNode(parent.children),
+    };
+    return [parent, newNode];
+  }
+  const newNode: NodeFlex = {
+    id: newId.current--,
+    type: Type.FLEX,
+    size: oldNode.size || 0,
+    grow: oldNode.grow || 1,
+    flow: borderFlow,
+    children: addBorderNode([{ ...oldNode, size: 0, grow: 1 }]),
+  };
+  return [oldNode, newNode];
 }
 
 function newNodeOf(

@@ -29,31 +29,34 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
       });
     }
   };
+  const onResize = () => {
+    if (!canvas.current) return;
+    const elem = canvas.current;
+    const [minScale, maxScale] = scaleOffset(elem);
+    _setMinScale(minScale);
+    _setMaxScale(maxScale);
+    setScale(scale => {
+      if (scale < minScale) {
+        elem.scrollTo({
+          top: (main.height - elem.offsetHeight) / 2,
+        });
+        return minScale;
+      } else if (scale > maxScale) {
+        elem.scrollTo({
+          top: 0,
+        });
+        return maxScale;
+      } else {
+        return scale;
+      }
+    });
+  };
+  useEffect(onResize, [main]);
   useEffect(() => {
     if (!canvas.current) return;
     const elem = canvas.current;
     const [minScale] = scaleOffset(elem);
     _setScale(minScale);
-    const onResize = () => {
-      const [minScale, maxScale] = scaleOffset(elem);
-      _setMinScale(minScale);
-      _setMaxScale(maxScale);
-      setScale(scale => {
-        if (scale < minScale) {
-          elem.scrollTo({
-            top: (main.height - elem.offsetHeight) / 2,
-          });
-          return minScale;
-        } else if (scale > maxScale) {
-          elem.scrollTo({
-            top: 0,
-          });
-          return maxScale;
-        } else {
-          return scale;
-        }
-      });
-    };
     // @ts-ignore
     if (ResizeObserver) {
       // @ts-ignore
@@ -64,7 +67,7 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
       window.addEventListener('resize', onResize);
       return () => window.removeEventListener('resize', onResize);
     }
-  }, [canvas.current]);
+  }, [canvas.current, main.width, main.height]);
   return {
     offset,
     minScale,

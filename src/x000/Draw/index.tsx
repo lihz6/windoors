@@ -15,11 +15,14 @@ import React, {
   ReactElement,
   ReactHTMLElement,
   ReactEventHandler,
+  useContext,
 } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
-import { Collapse } from 'antd';
+import { Collapse, Input, Button, InputNumber } from 'antd';
 import withPath from '_base/withPath';
+import { context } from '_base/Context';
+import DrawBase from '_view/DrawBase';
 import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGridBox';
@@ -33,8 +36,15 @@ import './style.scss';
 
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
+    const { username } = useContext(context);
+    const [data, setData] = useState<Omit<DrawProps, 'author'> | null>(null);
+    if (data) {
+      return <Draw author={username} {...data} />;
+    }
     return (
-      <Draw width={1800} height={2400} author="lihzhang" title="Windoors" />
+      <div className="draw-init">
+        <DrawBase onSubmit={data => setData(data)} />
+      </div>
     );
   }
 );
@@ -49,6 +59,7 @@ function Draw(props: DrawProps) {
   const canvas = useRef<HTMLDivElement>(null);
   const {
     duplicateNodeById,
+    setMainNodeData,
     addBorderToNode,
     deleteNodeById,
     clearNodeById,
@@ -115,12 +126,16 @@ function Draw(props: DrawProps) {
             // setFocusNode(null);
           }}
         />
-        <Collapse bordered={false} defaultActiveKey={['1']}>
+        <Collapse defaultActiveKey={['1']}>
           <Collapse.Panel header="框体设置" key="1">
-            {mainNode.title}
-            {mainNode.width}
-            {mainNode.height}
-            框体宽高·开口位置·开口留白
+            <DrawBase
+              key={focusNode.length && focusNode[0].id}
+              onSubmit={data => setMainNodeData(data)}
+              height={mainNode.height}
+              width={mainNode.width}
+              title={mainNode.title}
+              size="small"
+            />
           </Collapse.Panel>
           <Collapse.Panel header="其他设置" key="2">
             其他设置

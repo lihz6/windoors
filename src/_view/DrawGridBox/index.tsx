@@ -15,7 +15,7 @@ import { tree } from '_util';
 import DrawGrid, { DrawGridProps } from '../DrawGrid';
 import './style.scss';
 import { Node, Type, Flow } from '../../x000/Draw/struct';
-type Border = 'top' | 'right' | 'bottom' | 'left';
+export type Border = 'top' | 'right' | 'bottom' | 'left';
 export interface DrawGridBoxProps extends DrawGridProps {
   onBorderClick(border: Border, node: Node | undefined): void;
   focusNode: Node[];
