@@ -57,7 +57,7 @@ export type NodeMain = {
   author: string;
   version: number;
   type: Type.MAIN;
-  flow: Flow.L2R;
+  flow: Flow;
   width: number;
   height: number;
   children: Node[];

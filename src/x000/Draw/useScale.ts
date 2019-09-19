@@ -1,22 +1,23 @@
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, RefObject, useRef } from 'react';
 import { NodeMain } from './struct';
 
 export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
+  const wh = useRef({ width: main.width, height: main.height });
   const [scale, setScale] = useState(0.618);
   const [minScale, _setMinScale] = useState(0);
   const [maxScale, _setMaxScale] = useState(1);
   const [offset, setOffset] = useState<[number, number]>([0, 0]);
   const scaleOffset = ({ offsetHeight, offsetWidth }: HTMLDivElement) => {
-    const hmin = (offsetHeight / main.height) * 96;
-    const wmin = (offsetWidth / main.width) * 96;
+    const hmin = (offsetHeight / wh.current.height) * 96;
+    const wmin = (offsetWidth / wh.current.width) * 96;
     const minScale = Math.ceil(Math.min(hmin, wmin));
     const maxScale = Math.floor(Math.max(hmin, wmin));
     _setMinScale(minScale);
     _setMaxScale(maxScale);
     setScale(minScale);
     setOffset([
-      (offsetWidth - main.width) / 2,
-      // (offsetHeight - main.height) / 2,
+      (offsetWidth - wh.current.width) / 2,
+      // (offsetHeight - wh.current.height) / 2,
       0,
     ]);
     return [minScale, maxScale];
@@ -25,7 +26,7 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
     if (canvas.current) {
       setScale(minaxScale);
       canvas.current.scrollTo({
-        top: (main.height - canvas.current.offsetHeight) / 2,
+        top: (wh.current.height - canvas.current.offsetHeight) / 2,
       });
     }
   };
@@ -38,7 +39,7 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
     setScale(scale => {
       if (scale < minScale) {
         elem.scrollTo({
-          top: (main.height - elem.offsetHeight) / 2,
+          top: (wh.current.height - elem.offsetHeight) / 2,
         });
         return minScale;
       } else if (scale > maxScale) {
@@ -51,7 +52,14 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
       }
     });
   };
-  useEffect(onResize, [main]);
+  useEffect(() => {
+    const { width, height } = main;
+    if (wh.current.width !== width || wh.current.height !== height) {
+      wh.current.height = height;
+      wh.current.width = width;
+      onResize();
+    }
+  }, [main]);
   useEffect(() => {
     if (!canvas.current) return;
     const elem = canvas.current;
@@ -67,7 +75,7 @@ export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
       window.addEventListener('resize', onResize);
       return () => window.removeEventListener('resize', onResize);
     }
-  }, [canvas.current, main.width, main.height]);
+  }, [canvas.current]);
   return {
     offset,
     minScale,

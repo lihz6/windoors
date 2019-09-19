@@ -27,7 +27,8 @@ import DrawScale from '_view/DrawScale';
 import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGridBox';
 import DrawMenu from '_view/DrawMenu';
-import { Type } from './struct';
+import DrawSize from '_view/DrawSize';
+import { Type, Flow, Node } from './struct';
 import useMnode from './useMnode';
 import useScale from './useScale';
 import useFocus from './useFocus';
@@ -37,7 +38,13 @@ import './style.scss';
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
     const { username } = useContext(context);
-    const [data, setData] = useState<Omit<DrawProps, 'author'> | null>(null);
+    const [data, setData] = useState<Omit<DrawProps, 'author'> | null>({
+      width: 1800,
+      height: 2400,
+      title: 'Windoors',
+      flow: Flow.L2R,
+      position: '01',
+    });
     if (data) {
       return <Draw author={username} {...data} />;
     }
@@ -54,6 +61,8 @@ export interface DrawProps {
   height: number;
   title: string;
   author: string;
+  flow: Flow;
+  position: string;
 }
 function Draw(props: DrawProps) {
   const canvas = useRef<HTMLDivElement>(null);
@@ -119,27 +128,31 @@ function Draw(props: DrawProps) {
             }
             addBorderToNode(border, innerNode);
           }}
-          squared={12}
+          squared={9}
           disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
           onDone={(column, area) => {
             addFromGrid(innerNode[0], column, area);
             // setFocusNode(null);
           }}
         />
-        <Collapse defaultActiveKey={['1']}>
+        <Collapse defaultActiveKey={['2']}>
           <Collapse.Panel header="框体设置" key="1">
             <DrawBase
+              {...mainNode}
+              size="small"
               key={focusNode.length && focusNode[0].id}
               onSubmit={data => setMainNodeData(data)}
-              height={mainNode.height}
-              width={mainNode.width}
-              title={mainNode.title}
-              size="small"
+              position={mainNode.children
+                .map(({ type }) => Number(type === Type.LOCK))
+                .join('')}
             />
           </Collapse.Panel>
-          <Collapse.Panel header="其他设置" key="2">
-            其他设置
-          </Collapse.Panel>
+          {focusNode[1] &&
+            [Type.AREA, Type.FLEX, Type.GRID].includes(focusNode[0].type) && (
+              <Collapse.Panel header="尺寸设置" key="2">
+                <DrawSize focusNode={focusNode as any} />
+              </Collapse.Panel>
+            )}
           <Collapse.Panel header="出料清单" key="3">
             出料清单
           </Collapse.Panel>
@@ -148,4 +161,10 @@ function Draw(props: DrawProps) {
       </div>
     </div>
   );
+}
+
+function configSize([child, parent]: Node[]) {
+  if (!parent || [Type.PIPE, Type.LOCK, Type.BONE].includes(child.type)) {
+    return null;
+  }
 }

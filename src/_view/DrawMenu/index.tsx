@@ -12,7 +12,7 @@ import React, { ReactNode, ReactEventHandler } from 'react';
 import { Button, Icon } from 'antd';
 // import chunk from 'lodash/chunk';
 // import { tree } from '_util';
-import { Node, Type } from '../../x000/Draw/struct';
+import { Node, Type, NodeArea } from '../../x000/Draw/struct';
 
 import './style.scss';
 
@@ -23,7 +23,6 @@ export interface DrawMenuProps {
 
 export default function DrawMenu({ focusNode, onClick }: DrawMenuProps) {
   /* 左右移·上下翻·去焦·清空·删除·全屏·插入·视角 */
-
   return (
     <div className="draw-menu-main">
       <Button.Group size="small" style={{ display: 'flex' }}>

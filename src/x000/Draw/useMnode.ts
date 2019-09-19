@@ -13,6 +13,7 @@ import {
   clearNode,
   deleteNode,
   duplicateNode,
+  duplicate,
   NodeGrid,
   NodeArea,
 } from './struct';
@@ -52,8 +53,18 @@ export default function useMnode(props: DrawProps): UseMnode {
     const [oldNode, newNode] = addBorder(border, innerNode as any, newId);
     setMainNode(replaceNode(mainNode, oldNode, newNode));
   };
-  const setMainNodeData = data => {
-    setMainNode({ ...mainNode, ...data });
+  const setMainNodeData = ({ position, ...data }) => {
+    const { children } = mainNode;
+    const pos = children.map(({ type }) => Number(type === Type.PIPE)).join('');
+    if (pos === position) {
+      setMainNode({ ...mainNode, ...data });
+    } else {
+      setMainNode({
+        ...mainNode,
+        ...data,
+        children: openChildren(children, pos, position, newId),
+      });
+    }
   };
   return {
     duplicateNodeById,
@@ -72,47 +83,73 @@ export default function useMnode(props: DrawProps): UseMnode {
 //                                                     //
 /////////////////////////////////////////////////////////
 
+function openChildren(
+  children: Node[],
+  oldPosition: string,
+  newPosition: string,
+  newId: MutableRefObject<number>
+): Node[] {
+  if (oldPosition === newPosition) {
+    return children;
+  }
+  const data = {
+    '0': children.find(({ type }) => type !== Type.LOCK),
+    '1': children.find(({ type }) => type === Type.LOCK),
+  };
+
+  return newPosition.split('').map((n, i) => {
+    const node = data[n] || {
+      id: newId.current--,
+      type: Type.LOCK,
+    };
+    if (newPosition.slice(0, i).includes(n)) {
+      return duplicate(node, () => newId.current--);
+    }
+    return node;
+  });
+}
+
 function initMnode(
-  props: DrawProps,
+  { position, ...props }: DrawProps,
   newId: MutableRefObject<number>
 ): NodeMain {
+  const children: Node[] = [
+    { id: newId.current--, type: Type.LOCK },
+    {
+      id: newId.current--,
+      type: Type.FLEX,
+      flow: Flow.L2R,
+      size: 0,
+      grow: 1,
+      children: [
+        { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+        {
+          id: newId.current--,
+          type: Type.FLEX,
+          flow: Flow.T2B,
+          size: 0,
+          grow: 1,
+          children: [
+            { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+            {
+              id: newId.current--,
+              type: Type.AREA,
+              size: 0,
+              grow: 1,
+            },
+            { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+          ],
+        },
+        { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
+      ],
+    },
+  ];
   return {
     ...props,
     version: 1,
     id: newId.current--,
     type: Type.MAIN,
-    flow: Flow.L2R,
-    children: [
-      { id: newId.current--, type: Type.LOCK },
-      {
-        id: newId.current--,
-        type: Type.FLEX,
-        flow: Flow.L2R,
-        size: 0,
-        grow: 1,
-        children: [
-          { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
-          {
-            id: newId.current--,
-            type: Type.FLEX,
-            flow: Flow.T2B,
-            size: 0,
-            grow: 1,
-            children: [
-              { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
-              {
-                id: newId.current--,
-                type: Type.AREA,
-                size: 0,
-                grow: 1,
-              },
-              { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
-            ],
-          },
-          { id: newId.current--, type: Type.PIPE, pipe: Pipe.W5H5 },
-        ],
-      },
-    ],
+    children: openChildren(children, '10', position, newId),
   };
 }
 

@@ -1,7 +1,7 @@
 /**
  * ```
  * 李鸿章 <poodll@163.com>
- * 9/6/2019, 2:34:13 PM
+ * 9/19/2019, 11:17:59 PM
  * ```
  * doc comment for the file goes here
  */
@@ -19,24 +19,18 @@
 // $color-{fail,okay,warn,info,dead}: status colors
 // `box-shadow`: $box-shadow
 
-.draw-node {
-  &-main {
+.draw-size {
+  &-item {
     display: flex;
-    transform-origin: center;
-    box-sizing: content-box;
-  }
-  &-focus {
-    background: pink !important;
-    box-shadow: none !important;
-    & > div {
-      opacity: 0.618;
+    white-space: nowrap;
+    // justify-content: center;
+    align-items: center;
+    & .ant-input-number,
+    & .ant-input {
+      flex: auto;
     }
   }
-  &-grid {
-    @for $i from 0 to 81 {
-      & > :nth-child(#{1 + $i}) {
-        grid-area: a#{$i};
-      }
-    }
+  &-item + &-item {
+    margin-top: 8px;
   }
 }
