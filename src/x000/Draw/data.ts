@@ -1,4 +1,4 @@
-import { NodeMain, Type, Flow, Pipe } from './struct';
+import { NodeMain, Type, Flow, Pipe } from '_type/struct';
 const now = Date.now();
 
 export const data: NodeMain = {

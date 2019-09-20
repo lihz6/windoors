@@ -39,8 +39,8 @@ export default function DrawGridSub({
   children,
 }: DrawGridSubProps) {
   const [start, setStart] = useState(-1);
-  const col = endrc[1] - startrc[1] + 1;
-  // const [row, col] = zip(endrc, startrc).map(([e, s]) => e! - s! + 1);
+  const col = endrc[1] - startrc[1];
+  // const [row, col] = zip(endrc, startrc).map(([e, s]) => e! - s!);
   // const [area, setArea] = useState(
   //   Array.from({ length: row * col }).map((_, index) => index)
   // );
@@ -59,8 +59,8 @@ export default function DrawGridSub({
       style={{
         gridColumnStart: startrc[1] + 1,
         gridRowStart: startrc[0] + 1,
-        gridColumnEnd: endrc[1] + 2,
-        gridRowEnd: endrc[0] + 2,
+        gridColumnEnd: endrc[1] + 1,
+        gridRowEnd: endrc[0] + 1,
         gridTemplateAreas: gridTemplateAreas(area, col),
       }}>
       {area

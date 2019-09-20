@@ -18,14 +18,28 @@ import chunk from 'lodash/chunk';
 // import { tree } from '_util';
 
 import './style.scss';
-import { NodeTree, NodeArea, Type, Flow } from '../../x000/Draw/struct';
+import {
+  NodeTree,
+  NodeArea,
+  Flow,
+  NodeGrid,
+  NodeFlex,
+  Type,
+} from '_type/struct';
 import { divmod } from '_util';
 
 export interface DrawSizeProps {
+  onSubmit(
+    node: NodeGrid | NodeArea | NodeFlex,
+    data: Pick<NodeGrid, 'template'> | Pick<NodeArea, 'grow' | 'size'>
+  ): void;
   focusNode: [NodeArea, ...NodeTree[]];
 }
 
-export default function DrawSize({ focusNode: [node, parent] }: DrawSizeProps) {
+export default function DrawSize({
+  focusNode: [node, parent],
+  onSubmit,
+}: DrawSizeProps) {
   const [{ size, grow }, setGrowSize] = useState({
     size: node.size,
     grow: node.grow,
@@ -33,9 +47,6 @@ export default function DrawSize({ focusNode: [node, parent] }: DrawSizeProps) {
   const [template, _setTemplate] = useState<number[]>(parent['template'] || []);
   const setTemplate = (value, index) => {
     _setTemplate(template.map((v, i) => (i === index ? value : v)));
-  };
-  const onClick = () => {
-    console.log('Okay');
   };
   if (parent.type === Type.FLEX || parent.type === Type.MAIN) {
     const lables = { [Flow.L2R]: '宽：', [Flow.T2B]: '高：' };
@@ -50,14 +61,16 @@ export default function DrawSize({ focusNode: [node, parent] }: DrawSizeProps) {
               return a;
             }
             return a + (b['grow'] || 0);
-          }, grow || 0)}
+          }, grow)}
           size={size}
           grow={grow}
         />
         <div className="draw-size-item">
           <div>　　</div>
           <Button
-            onClick={onClick}
+            onClick={() => {
+              onSubmit(node, { grow, size });
+            }}
             size="small"
             type="primary"
             disabled={
@@ -88,35 +101,39 @@ export default function DrawSize({ focusNode: [node, parent] }: DrawSizeProps) {
   return (
     <React.Fragment>
       {chunk(temp.slice(cs, ce), 2).map(
-        ([[grow, growIndex], [size, sizeIndex]]) => (
-          <Item
-            key={growIndex}
-            onGrowChange={grow => setTemplate(grow, growIndex)}
-            onSizeChange={size => setTemplate(size, sizeIndex)}
-            label="宽："
-            base={colBase}
-            size={size}
-            grow={grow}
-          />
-        )
+        ([[grow, growIndex], [size, sizeIndex]]) =>
+          size < 0 ? null : (
+            <Item
+              key={growIndex}
+              onGrowChange={grow => setTemplate(grow, growIndex)}
+              onSizeChange={size => setTemplate(size, sizeIndex)}
+              label="宽："
+              base={colBase}
+              size={size}
+              grow={grow}
+            />
+          )
       )}
       {chunk(temp.slice(rs, re), 2).map(
-        ([[grow, growIndex], [size, sizeIndex]]) => (
-          <Item
-            key={growIndex}
-            onGrowChange={grow => setTemplate(grow, growIndex)}
-            onSizeChange={size => setTemplate(size, sizeIndex)}
-            label="高："
-            base={rowBase}
-            size={size}
-            grow={grow}
-          />
-        )
+        ([[grow, growIndex], [size, sizeIndex]]) =>
+          size < 0 ? null : (
+            <Item
+              key={growIndex}
+              onGrowChange={grow => setTemplate(grow, growIndex)}
+              onSizeChange={size => setTemplate(size, sizeIndex)}
+              label="高："
+              base={rowBase}
+              size={size}
+              grow={grow}
+            />
+          )
       )}
       <div className="draw-size-item">
         <div>　　</div>
         <Button
-          onClick={onClick}
+          onClick={() => {
+            onSubmit(parent, { template });
+          }}
           size="small"
           type="primary"
           disabled={isEqual(parent.template, template)}>
@@ -127,7 +144,7 @@ export default function DrawSize({ focusNode: [node, parent] }: DrawSizeProps) {
   );
 }
 
-function Item({ label, size, grow, base = 1, onSizeChange, onGrowChange }) {
+function Item({ label, size, grow, base, onSizeChange, onGrowChange }) {
   const basement = `${base || 1}`;
   return (
     <div className="draw-size-item">
@@ -135,8 +152,9 @@ function Item({ label, size, grow, base = 1, onSizeChange, onGrowChange }) {
       <InputNumber
         value={grow}
         size="small"
+        disabled={base - grow <= 0}
         onChange={value => {
-          onGrowChange(value);
+          onGrowChange(value || 0);
         }}
       />
       <div title={basement}>&nbsp;/&nbsp;{basement}&nbsp;+&nbsp;</div>
@@ -144,7 +162,7 @@ function Item({ label, size, grow, base = 1, onSizeChange, onGrowChange }) {
         size="small"
         value={size}
         onChange={value => {
-          onSizeChange(value);
+          onSizeChange(value || 0);
         }}
       />
       <div>&nbsp;mm</div>

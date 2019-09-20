@@ -21,7 +21,7 @@ import { Input, InputNumber, Button } from 'antd';
 import { tree } from '_util';
 
 import './style.scss';
-import { Flow, Node, Type } from '../../x000/Draw/struct';
+import { Flow, Node, Type } from '_type/struct';
 
 export interface DrawBaseProps {
   onSubmit({ width, height, title, flow, position }): void;

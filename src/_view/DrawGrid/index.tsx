@@ -72,9 +72,9 @@ export default class DrawGrid extends React.PureComponent<
       );
       return [null, indices];
     }
-    const erc = divmod(end, squared);
+    const erc = divmod(end, squared, 1);
     const src = divmod(start, squared);
-    const [row, col] = zip(erc, src).map(([e, s]) => e! - s! + 1);
+    const [row, col] = zip(erc, src).map(([e, s]) => e! - s!);
     const elem = (
       <DrawGridSub
         setArea={this.setState}
@@ -176,13 +176,4 @@ export function inSquared(
     idx % squared >= min % squared &&
     idx % squared <= max % squared
   );
-}
-export function what(start: number, end: number, cell: number) {
-  if (start % cell === end % cell) {
-    return 'column';
-  }
-  if (Math.floor(start / cell) === Math.floor(end / cell)) {
-    return 'row';
-  }
-  return 'grid';
 }

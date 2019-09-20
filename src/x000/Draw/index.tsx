@@ -7,19 +7,9 @@
  */
 
 /** Happy Coding */
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  SyntheticEvent,
-  ReactElement,
-  ReactHTMLElement,
-  ReactEventHandler,
-  useContext,
-} from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 
-import { Collapse, Input, Button, InputNumber } from 'antd';
+import { Collapse } from 'antd';
 import withPath from '_base/withPath';
 import { context } from '_base/Context';
 import DrawBase from '_view/DrawBase';
@@ -28,7 +18,7 @@ import DrawNode from '_view/DrawNode';
 import DrawGrid from '_view/DrawGridBox';
 import DrawMenu from '_view/DrawMenu';
 import DrawSize from '_view/DrawSize';
-import { Type, Flow, Node } from './struct';
+import { Flow, Type } from '_type/struct';
 import useMnode from './useMnode';
 import useScale from './useScale';
 import useFocus from './useFocus';
@@ -67,14 +57,15 @@ export interface DrawProps {
 function Draw(props: DrawProps) {
   const canvas = useRef<HTMLDivElement>(null);
   const {
-    duplicateNodeById,
     setMainNodeData,
-    addBorderToNode,
-    deleteNodeById,
-    clearNodeById,
-    addFromGrid,
+    setMainNode,
+    resizeNode,
+    newNodeId,
     mainNode,
   } = useMnode(props);
+  useEffect(() => {
+    console.log(mainNode);
+  }, [mainNode]);
   const { focusNode, innerNode, setFocusNode } = useFocus(mainNode);
   const {
     setMinScale,
@@ -85,12 +76,14 @@ function Draw(props: DrawProps) {
     offset,
     scale,
   } = useScale(mainNode, canvas);
+  const focusKey = focusNode.length && focusNode[0].id;
+  const innerKey = innerNode.length && innerNode[0].id;
   return (
     <div className="draw-main">
       <div className="draw-canvas" ref={canvas} tabIndex={0}>
         <DrawNode
           onClick={setFocusNode}
-          focusId={focusNode.length && focusNode[0].id}
+          focusId={focusKey}
           offset={offset}
           scale={scale}
           mainNode={mainNode}
@@ -106,41 +99,24 @@ function Draw(props: DrawProps) {
           scale={scale}
         />
         <DrawMenu
+          setMainNode={setMainNode}
+          newNodeId={newNodeId}
           focusNode={focusNode}
-          onClick={(action, node) => {
-            switch (action) {
-              case 'duplicate':
-                return duplicateNodeById(node.id);
-              case 'delete':
-                return deleteNodeById(node.id);
-              case 'clear':
-                return clearNodeById(node.id);
-            }
-          }}
         />
         <DrawGrid
-          key={innerNode.length && innerNode[0].id}
+          key={innerKey}
+          setMainNode={setMainNode}
           focusNode={focusNode}
           innerNode={innerNode}
-          onBorderClick={(border, node) => {
-            if (node) {
-              return deleteNodeById(node.id);
-            }
-            addBorderToNode(border, innerNode);
-          }}
+          newNodeId={newNodeId}
           squared={9}
-          disabled={!innerNode.length || innerNode[0].type !== Type.AREA}
-          onDone={(column, area) => {
-            addFromGrid(innerNode[0], column, area);
-            // setFocusNode(null);
-          }}
         />
         <Collapse defaultActiveKey={['2']}>
           <Collapse.Panel header="框体设置" key="1">
             <DrawBase
               {...mainNode}
               size="small"
-              key={focusNode.length && focusNode[0].id}
+              key={focusKey}
               onSubmit={data => setMainNodeData(data)}
               position={mainNode.children
                 .map(({ type }) => Number(type === Type.LOCK))
@@ -150,7 +126,13 @@ function Draw(props: DrawProps) {
           {focusNode[1] &&
             [Type.AREA, Type.FLEX, Type.GRID].includes(focusNode[0].type) && (
               <Collapse.Panel header="尺寸设置" key="2">
-                <DrawSize focusNode={focusNode as any} />
+                <DrawSize
+                  key={focusKey}
+                  focusNode={focusNode as any}
+                  onSubmit={(node, data) => {
+                    resizeNode(node, data);
+                  }}
+                />
               </Collapse.Panel>
             )}
           <Collapse.Panel header="出料清单" key="3">
@@ -161,10 +143,4 @@ function Draw(props: DrawProps) {
       </div>
     </div>
   );
-}
-
-function configSize([child, parent]: Node[]) {
-  if (!parent || [Type.PIPE, Type.LOCK, Type.BONE].includes(child.type)) {
-    return null;
-  }
 }

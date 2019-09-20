@@ -12,7 +12,7 @@ import React, { ReactNode, ReactEventHandler, SyntheticEvent } from 'react';
 // import { Icon } from 'antd';
 // import chunk from 'lodash/chunk';
 import { tree, gridTemplateAreas, gridTemplateStyle } from '_util';
-import { NodeMain, Node, Type, lockwidth } from '../../x000/Draw/struct';
+import { NodeMain, Node, lockwidth, Type } from '_type/struct';
 
 import './style.scss';
 
@@ -55,15 +55,15 @@ function render(
   focusId: number,
   onClick: DrawNodeProps['onClick']
 ) {
-  interface Props {
-    key: number;
-    className: string;
-  }
-  const props: Props = {
+  const props = {
     key: node.id,
     className: tree({
       'draw-node': { focus: node.id === focusId, [node.type]: true },
     }),
+  };
+  const onNodeClick: ReactEventHandler = event => {
+    event.stopPropagation();
+    onClick(node);
   };
   switch (node.type) {
     // case Type.MAIN: see DrawNode
@@ -78,18 +78,6 @@ function render(
           }}
         />
       );
-    case Type.FLEX:
-      return (
-        <div
-          {...props}
-          style={{
-            display: 'flex',
-            flexDirection: node.flow,
-            flex: `${node.grow} ${node.grow} ${node.size}px`,
-          }}>
-          {node.children.map(child => render(child, node, focusId, onClick))}
-        </div>
-      );
     case Type.GRID:
       return (
         <div
@@ -103,11 +91,24 @@ function render(
           {node.children.map(child => render(child, node, focusId, onClick))}
         </div>
       );
+    case Type.FLEX:
+      return (
+        <div
+          {...props}
+          onClick={onNodeClick}
+          style={{
+            display: 'flex',
+            flexDirection: node.flow,
+            flex: `${node.grow} ${node.grow} ${node.size}px`,
+          }}>
+          {node.children.map(child => render(child, node, focusId, onClick))}
+        </div>
+      );
     case Type.AREA:
       return (
         <div
           {...props}
-          onClick={() => onClick(node)}
+          onClick={onNodeClick}
           style={{
             flex: `${node.grow} ${node.grow} ${node.size}px`,
           }}
@@ -118,7 +119,7 @@ function render(
       return (
         <div
           {...props}
-          onClick={() => onClick(node)}
+          onClick={onNodeClick}
           style={{
             flex: `0 0 ${node.pipe.width}px`,
             // background: 'linear-gradient(45deg, #777, #aaa, #777)',
@@ -131,7 +132,7 @@ function render(
       return (
         <div
           {...props}
-          onClick={() => onClick(node)}
+          onClick={onNodeClick}
           style={{
             width: `${node.bone.width}px`,
             height: `${node.bone.height}px`,

@@ -1,5 +1,5 @@
 import { useState, useEffect, RefObject, useRef } from 'react';
-import { NodeMain } from './struct';
+import { NodeMain } from '_type/struct';
 
 export default function(main: NodeMain, canvas: RefObject<HTMLDivElement>) {
   const wh = useRef({ width: main.width, height: main.height });

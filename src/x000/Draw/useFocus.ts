@@ -7,7 +7,7 @@ import {
   containNode,
   frameNode,
   NodeTree,
-} from './struct';
+} from '_type/struct';
 
 export default function useFocus(mainNode: NodeMain) {
   const [{ focusNode, innerNode }, _setNode] = useState<{
