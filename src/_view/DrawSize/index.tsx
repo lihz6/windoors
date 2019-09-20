@@ -37,12 +37,12 @@ export interface DrawSizeProps {
 }
 
 export default function DrawSize({
-  focusNode: [node, parent],
+  focusNode: [current, parent],
   onSubmit,
 }: DrawSizeProps) {
   const [{ size, grow }, setGrowSize] = useState({
-    size: node.size,
-    grow: node.grow,
+    size: current.size,
+    grow: current.grow,
   });
   const [template, _setTemplate] = useState<number[]>(parent['template'] || []);
   const setTemplate = (value, index) => {
@@ -57,7 +57,7 @@ export default function DrawSize({
           onGrowChange={grow => setGrowSize({ grow, size })}
           onSizeChange={size => setGrowSize({ grow, size })}
           base={parent.children.reduce((a, b) => {
-            if (b.id === node.id) {
+            if (b.id === current.id) {
               return a;
             }
             return a + (b['grow'] || 0);
@@ -69,7 +69,7 @@ export default function DrawSize({
           <div>　　</div>
           <Button
             onClick={() => {
-              onSubmit(node, { grow, size });
+              onSubmit(current, { grow, size });
             }}
             size="small"
             type="primary"
@@ -77,7 +77,7 @@ export default function DrawSize({
               size < 0 ||
               grow < 0 ||
               size + grow <= 0 ||
-              (size === node.size && grow === node.grow)
+              (size === current.size && grow === current.grow)
             }>
             确定
           </Button>
@@ -86,7 +86,7 @@ export default function DrawSize({
     );
   }
   const { column, area, children } = parent;
-  const index = children.findIndex(({ id }) => id === node.id);
+  const index = children.findIndex(({ id }) => id === current.id);
   const [rs, cs] = divmod(indexOf(area, index), column);
   const [re, ce] = divmod(lastIndexOf(area, index), column, 1);
   const temp = template.map((value, index) => [value, index]);
@@ -114,7 +114,7 @@ export default function DrawSize({
             />
           )
       )}
-      {chunk(temp.slice(rs, re), 2).map(
+      {chunk(temp.slice(column + rs, column + re), 2).map(
         ([[grow, growIndex], [size, sizeIndex]]) =>
           size < 0 ? null : (
             <Item
@@ -152,7 +152,7 @@ function Item({ label, size, grow, base, onSizeChange, onGrowChange }) {
       <InputNumber
         value={grow}
         size="small"
-        disabled={base - grow <= 0}
+        disabled={base <= grow}
         onChange={value => {
           onGrowChange(value || 0);
         }}
