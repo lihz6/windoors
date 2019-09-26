@@ -63,6 +63,7 @@ function Draw(props: DrawProps) {
     setMainNodeData,
     setMainNode,
     resizeNode,
+    nodeSizing,
     newNodeId,
     mainNode,
   } = useMnode(props);
@@ -114,7 +115,7 @@ function Draw(props: DrawProps) {
           newNodeId={newNodeId}
           squared={9}
         />
-        <Collapse defaultActiveKey={['2', '3']}>
+        <Collapse defaultActiveKey={['2', '3', '4']}>
           <Collapse.Panel header="框体设置" key="1">
             <DrawBase
               {...mainNode}
@@ -143,7 +144,15 @@ function Draw(props: DrawProps) {
               花纹选择
             </Collapse.Panel>
           )}
-          <Collapse.Panel header="出料清单" key="4">
+          {focusNode.length > 0 && nodeSizing[focusKey] && (
+            <Collapse.Panel header="尺寸信息" key="4">
+              宽：{nodeSizing[focusKey].width}
+              <br />
+              高：{nodeSizing[focusKey].height}
+            </Collapse.Panel>
+          )}
+
+          <Collapse.Panel header="出料清单" key="5">
             出料清单
           </Collapse.Panel>
         </Collapse>

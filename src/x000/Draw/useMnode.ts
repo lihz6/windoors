@@ -4,6 +4,7 @@ import {
   MutableRefObject,
   Dispatch,
   SetStateAction,
+  useMemo,
 } from 'react';
 import {
   NodeMain,
@@ -15,6 +16,7 @@ import {
   duplicate,
   NodeGrid,
   NodeArea,
+  calcNodeSizing,
   Type,
 } from '_type/struct';
 import { DrawProps } from '.';
@@ -27,10 +29,12 @@ export interface UseMnode {
   newNodeId(): number;
   setMainNodeData: any;
   mainNode: NodeMain;
+  nodeSizing: ReturnType<typeof calcNodeSizing>;
 }
 export default function useMnode(props: DrawProps): UseMnode {
   const newId = useRef(Date.now());
   const [mainNode, setMainNode] = useState<NodeMain>(initMnode(props, newId));
+  const nodeSizing = useMemo(() => calcNodeSizing(mainNode), [mainNode]);
   const newNodeId = () => newId.current--;
 
   const setMainNodeData = ({ position, ...data }) => {
@@ -53,6 +57,7 @@ export default function useMnode(props: DrawProps): UseMnode {
   return {
     setMainNodeData,
     setMainNode,
+    nodeSizing,
     resizeNode,
     newNodeId,
     mainNode,

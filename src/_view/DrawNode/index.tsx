@@ -51,7 +51,7 @@ export default function DrawNode({
 
 function render(
   node: Node,
-  main: Node,
+  parent: Node,
   focusId: number,
   onClick: DrawNodeProps['onClick']
 ) {
@@ -72,7 +72,7 @@ function render(
         <div
           {...props}
           style={{
-            flex: `0 0 ${lockwidth(main as NodeMain)}px`,
+            flex: `0 0 ${lockwidth(parent as NodeMain)}px`,
             // flex: `0 0 0.5%`,
             background: 'yellow',
           }}

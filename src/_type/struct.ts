@@ -1,3 +1,6 @@
+import lastIndexOf from 'lodash/lastIndexOf';
+import indexOf from 'lodash/indexOf';
+import { divmod, allocsize } from '_util';
 export enum Type {
   MAIN = 'main', // 门框
   LOCK = 'lock', // 门隙
@@ -117,7 +120,8 @@ export type NodeBone = {
 export type NodeTree = NodeMain | NodeGrid | NodeFlex;
 // no children
 export type NodeLeaf = NodeLock | NodeArea | NodePipe | NodeBone;
-
+// .grow .size
+export type NodeGrow = NodeArea | NodeFlex | NodeGrid | NodeBone;
 export type Node = NodeTree | NodeLeaf;
 
 export function lockwidth(root: NodeMain) {
@@ -136,7 +140,120 @@ export function lockwidth(root: NodeMain) {
   const { width, children } = root;
   const height = barheight(children);
   const square = (width - height) * (width + height);
-  return Math.ceil(width - Math.sqrt(square));
+  const result = width - Math.sqrt(square);
+  // NOTE: 0 | 01 | 10 | 010
+  return Math.ceil(result * (children.length - 1));
+}
+
+export function calcNodeSizing(root: NodeMain) {
+  const sizing: { [key: number]: { width: number; height: number } } = {
+    [root.id]: {
+      width: root.width,
+      height: root.height,
+    },
+  };
+  const tree = (parent: NodeTree, children: Node[]) => {
+    if (parent.type === Type.GRID) {
+      // TODO
+      const sizeTemplate = (
+        parentSize: number,
+        template: number[]
+      ): number[] => {
+        const [growTotal, sizeTotal] = template.reduce(
+          ([growTotal, sizeTotal], a, index) => {
+            if (index % 2) {
+              return [growTotal, sizeTotal + Math.abs(a)];
+            } else {
+              return [growTotal + a, sizeTotal];
+            }
+          },
+          [0, 0]
+        );
+        const growSize = allocsize(parentSize - sizeTotal, growTotal);
+        return template.map((a, index) => {
+          if (index % 2) {
+            return Math.abs(a);
+          } else {
+            return growSize(a);
+          }
+        });
+      };
+      // to be continue
+      const { column, template, area, children } = parent;
+      const colTemplate = sizeTemplate(
+        sizing[parent.id].width,
+        template.slice(0, column)
+      );
+      const rowTemplate = sizeTemplate(
+        sizing[parent.id].height,
+        template.slice(column)
+      );
+      children.forEach((node, index) => {
+        const first = indexOf(area, index);
+        const last = lastIndexOf(area, index);
+        const [rs, cs] = divmod(first, column);
+        const [re, ce] = divmod(last, column, 1);
+        sizing[node.id] = {
+          width: colTemplate.slice(cs, ce).reduce((a, b) => a + b, 0),
+          height: rowTemplate.slice(rs, re).reduce((a, b) => a + b, 0),
+        };
+        if (node.type === Type.FLEX || node.type === Type.GRID) {
+          tree(node, node.children);
+        }
+      });
+    } else {
+      const flexSizing = ({ id, flow }: typeof parent, size: number) => {
+        if (flow === Flow.L2R) {
+          return {
+            width: size,
+            height: sizing[id].height,
+          };
+        } else {
+          return {
+            width: sizing[id].width,
+            height: size,
+          };
+        }
+      };
+      const [sizeTotal, growTotal, growable] = children.reduce(
+        ([sizeTotal, growTotal, growable], child) => {
+          if (child.type === Type.LOCK) {
+            const size = lockwidth(parent as NodeMain);
+            sizing[child.id] = flexSizing(parent, size);
+            return [sizeTotal + size, growTotal, growable];
+          } else if (child.type === Type.PIPE) {
+            const size = child.pipe.width;
+            sizing[child.id] = flexSizing(parent, size);
+            return [sizeTotal + size, growTotal, growable];
+          } else if (child.type === Type.MAIN) {
+            throw `Only one '${Type.MAIN}' one tree`;
+          } else {
+            const { grow, size } = child;
+            return [
+              sizeTotal + Math.abs(size),
+              growTotal + grow,
+              growable.concat(child),
+            ];
+          }
+        },
+        [0, 0, [] as NodeGrow[]]
+      );
+      const parentSize =
+        sizing[parent.id][
+          { [Flow.L2R]: 'width', [Flow.T2B]: 'height' }[parent.flow]
+        ];
+      const growSize = allocsize(parentSize - sizeTotal, growTotal);
+      growable.forEach(node => {
+        const { size, grow } = node;
+        sizing[node.id] = flexSizing(parent, Math.abs(size) + growSize(grow));
+        if (node.type !== Type.AREA && node.type !== Type.BONE) {
+          tree(node, node.children);
+        }
+      });
+    }
+  };
+  tree(root, root.children);
+  return sizing;
 }
 
 export function findNode(root: Node, childId: number): [Node, ...NodeTree[]] {
