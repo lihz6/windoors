@@ -2,9 +2,9 @@ import { ReactEventHandler, Dispatch, SetStateAction } from 'react';
 import { NodeMain, Node, Type, treeNode, NodeTree } from '_type/struct';
 export default function useClear(
   setMainNode: Dispatch<SetStateAction<NodeMain>>,
-  focusNode: Node[]
+  innerNode: Node[] // Before focusNode
 ): [boolean, ReactEventHandler] {
-  const [current] = focusNode;
+  const [current] = innerNode;
   const canClear =
     current && [Type.FLEX, Type.GRID, Type.BONE].includes(current.type);
   if (canClear && current.type === Type.BONE) {

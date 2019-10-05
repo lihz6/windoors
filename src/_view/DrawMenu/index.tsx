@@ -23,11 +23,13 @@ export interface DrawMenuProps {
   setMainNode: Dispatch<SetStateAction<NodeMain>>;
   newNodeId(): number;
   focusNode: Node[];
+  innerNode: Node[];
 }
 
 export default function DrawMenu({
-  focusNode,
   setMainNode,
+  focusNode,
+  innerNode,
   newNodeId,
 }: DrawMenuProps) {
   /* 左右移·上下翻·去焦·清空·删除·全屏·视角 */
@@ -37,7 +39,7 @@ export default function DrawMenu({
     newNodeId
   );
   const [cantDelete, deleteNode] = useDelete(setMainNode, focusNode);
-  const [cantClear, clearNode] = useClear(setMainNode, focusNode);
+  const [cantClear, clearNode] = useClear(setMainNode, innerNode);
   return (
     <div className="draw-menu-main">
       <Button.Group size="small" style={{ display: 'flex' }}>

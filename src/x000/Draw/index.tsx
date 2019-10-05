@@ -31,6 +31,9 @@ import './style.scss';
 export default withPath('/x000/draw', {}, {})(
   ({ history, match: { params } }) => {
     const { username } = useContext(context);
+    // Code 1
+    // const [data, setData] = useState<Omit<DrawProps, 'author'> | null>(null);
+    // Code 2
     const [data, setData] = useState<Omit<DrawProps, 'author'> | null>({
       width: 1800,
       height: 2400,
@@ -87,7 +90,7 @@ function Draw(props: DrawProps) {
       <div className="draw-canvas" ref={canvas} tabIndex={0}>
         <DrawNode
           onClick={setFocusNode}
-          focusId={focusKey}
+          focusId={innerKey}
           offset={offset}
           scale={scale}
           mainNode={mainNode}
@@ -104,8 +107,9 @@ function Draw(props: DrawProps) {
         />
         <DrawMenu
           setMainNode={setMainNode}
-          newNodeId={newNodeId}
           focusNode={focusNode}
+          innerNode={innerNode}
+          newNodeId={newNodeId}
         />
         <DrawGrid
           key={innerKey}
@@ -144,11 +148,11 @@ function Draw(props: DrawProps) {
               花纹选择
             </Collapse.Panel>
           )}
-          {focusNode.length > 0 && nodeSizing[focusKey] && (
+          {innerNode.length > 0 && nodeSizing[innerKey] && (
             <Collapse.Panel header="尺寸信息" key="4">
-              宽：{nodeSizing[focusKey].width}
+              宽：{nodeSizing[innerKey].width}
               <br />
-              高：{nodeSizing[focusKey].height}
+              高：{nodeSizing[innerKey].height}
             </Collapse.Panel>
           )}
 

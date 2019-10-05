@@ -52,10 +52,13 @@ function oldNewNode(
 ): [Node, Node] {
   if (column === 1 || column === area.length) {
     const newNode = newNodeFlex(current, column, area, newId);
-    if (parent.type !== Type.FLEX || parent.flow !== newNode.flow) {
-      return [current, newNode];
-    }
-    return [parent, concatNode(newNode, parent)];
+    // Code 1
+    return [current, newNode];
+    // Code 2
+    // if (parent.type !== Type.FLEX || parent.flow !== newNode.flow) {
+    //   return [current, newNode];
+    // }
+    // return [parent, concatNode(newNode, parent)];
   }
   return [current, newNodeGrid(current, column, area, newId)];
 }
